@@ -77,7 +77,7 @@ class Constellation:
         self.loadFromConfig(nameCode)
         
     def loadFromConfig(self, nameCode):
-        f = open('ConstellationsTest.json')
+        f = open('constellationsTest.json')
         jsonData = json.loads(f.read())
         
         for entryIdx in range(len(jsonData)):
