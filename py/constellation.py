@@ -3,6 +3,8 @@
 
 
 # TODO:
+# - Проверить вычисление координат КА. Похоже, что предыдущая реализация не учитывала
+#   указанную долготу восходящего узла. См. воркэраунд в коде.
 # - Реализовать юнит тесты для core-функционала
 # - Для класса Constellation разделить core-функционал и ввод-вывод (загрузку из JSON)
 # - Рассмотреть возможность изменения API: заменить массив с описанием группы
@@ -139,6 +141,9 @@ class Constellation:
         Omega0      = np.sqrt(Const.earthGM / sma**3)
         aol0        = self.elements[:, 5]
 
+        sin_raan    = np.sin(self.elements[:, 3])
+        cos_raan    = np.cos(self.elements[:, 3])
+
         # TODO: Дополнить формулу для случая ненулевого эксцентриситета
         raanPrecessionRate = -1.5 * (Const.earthJ2 * np.sqrt(Const.earthGM) * Const.earthRadius**2) \
             / (sma**(7/2)) * np.cos(inclination)
@@ -155,6 +160,15 @@ class Constellation:
             epochState = sma * [(np.cos(aol) * np.cos(Omega) - np.sin(aol) * np.cos(inclination) * np.sin(Omega)),
                                 (np.cos(aol) * np.sin(Omega) + np.sin(aol) * np.cos(inclination) * np.cos(Omega)),
                                 (np.sin(aol) * np.sin(inclination))]
+
+            # Поворот на долготу восходящего узла (воркэраунд)
+            # TODO: объединить с предыдущей строкой в единую формулу
+            epochState = [
+                epochState[0] * cos_raan - epochState[1] * sin_raan,
+                epochState[0] * sin_raan + epochState[1] * cos_raan,
+                epochState[2],
+            ]
+
             res[:, :, epochIdx]  = np.array(epochState).T
 
         return res
