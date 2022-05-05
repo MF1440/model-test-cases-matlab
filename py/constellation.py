@@ -26,6 +26,7 @@ Const = Parameters()
 Const.earthRadius = 6378135;           # Экваториальный радиус Земли [km]
 Const.earthGM = 3.986004415e+14;       # Гравитационный параметр Земли [m3/s2]
 Const.earthJ2 = 1.082626e-3;           # Второй динамический коэффициент формы Земли
+Const.earthOmega = 7.2921158553e-5     # Угловая скорость вращения Земли [1/s]
 
 group = Parameters()
 
