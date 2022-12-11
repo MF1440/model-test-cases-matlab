@@ -7,13 +7,13 @@ constellationConfigFileName = '../data/constellationsTest.json';
 constellationName = 'Starlink';
 constellation = Constellation(constellationConfigFileName, constellationName);
 
-%вычисление элементов орбиты для всех КА в начальный момент
-constellation.getInitialState();
+% Вычисление элементов орбиты для всех КА в начальный момент
+constellation.initInitialState();
 
-% определение точек на оси времени, в которые будут проихзводиться расчёты
+% Определение точек на оси времени, в которые будут проихзводиться расчёты
 epochs = (0: 1000: 6000);
 
-% расчёт положений всех КА в заданные моменты времени
+% Расчёт положений всех КА в заданные моменты времени
 OrbitPropagators.propagateJ2(constellation, epochs)
 
 % Координаты случайного КА (в инерциальных осях) после этого можно прочитать из constellation.state.eci

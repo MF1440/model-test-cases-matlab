@@ -1,14 +1,20 @@
 classdef Constellation < handle
-
+% Класс, описывающий космическую группировку и её состояние в заданные моменты времени
     properties
         totalSatCount = 0;
-        groups = {};
-        state;
+        groups = {}; % Массив структур для хранения основных параметров группы спутников
+        state; % Структура, определяющая состояние космических аппаратов в заданные моменты времени
+    end
+
+    methods (Static)
+        elements = initGroupElements(group)
     end
 
     methods
 
         createConstellationFromJson(constellation, fileName, constellationName)
+
+        initInitialState(constellation)
 
         function this = Constellation(varargin)
             % Конструктор класса. 
@@ -23,43 +29,10 @@ classdef Constellation < handle
                 end
             elseif isempty(varargin)
                 return
+            else
+                error('Создание экземпляра класса с использованием данного набора аргументов не поддерживается!')
             end
         end
 
-        function getInitialState(this)
-            this.state.elements = zeros(this.totalSatCount, 6);
-            shift = 1;
-
-            for group = this.groups
-                for i = 1:length(group{1})
-                    ending = shift + group{1}(i).totalSatCount - 1;
-                    this.state.elements(shift:ending,:) = this.getInitialElements(group{1});
-                    shift = ending + 1;
-                end
-            end
-        end
-
-        function elements = getInitialElements(this, group)
-            
-            earthRadius = Constants.AstroConstants.earthRadius;
-            metersPerKm = 1000;
-
-            raans = linspace(group.startRaan, group.startRaan + group.maxRaan, group.planeCount + 1);
-            raans = mod(raans(1:end-1), 2 * pi);
-
-            elements = zeros(group.totalSatCount, 6);
-            idx = 1;
-            raanIDX = 0;
-            for raan = raans
-                for i = 0:group.satsPerPlane-1
-                    sma = earthRadius + group.altitudeKilometers * metersPerKm;
-                    aol = 2 * pi / group.satsPerPlane * i + 2 * pi / group.totalSatCount * group.f * raanIDX;
-
-                    elements(idx, :) = [sma, 0, 0, raan, group.inclination, aol];
-                    idx = idx + 1;
-                end
-                raanIDX = raanIDX + 1;
-            end
-        end        
     end
 end
