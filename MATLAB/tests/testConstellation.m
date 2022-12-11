@@ -10,7 +10,7 @@ constellation = Constellation(constellationConfigFileName, constellationName);
 % Вычисление элементов орбиты для всех КА в начальный момент
 constellation.initInitialState();
 
-% Определение точек на оси времени, в которые будут проихзводиться расчёты
+% Определение точек на оси времени, в которые будут производиться расчёты
 firstEpoch = 0;
 lastEpoch = 6000;
 epochStep = 1000;
