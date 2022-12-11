@@ -2,7 +2,7 @@ classdef Constellation < handle
 
     properties
         totalSatCount = 0;
-        groups = {};
+        groupArray = {};
         state;
 
         % константы
@@ -13,11 +13,11 @@ classdef Constellation < handle
 
     methods
 
-        function this = Constellation(varargin)
+        function objConstel = Constellation(varargin)
             if isempty(varargin)
                 return
             end
-            this.loadFromConfigFile(varargin{1});
+            objConstel.loadFromConfigFile(varargin{1});
         end
 
         function loadFromConfigFile(this, code)
@@ -26,9 +26,9 @@ classdef Constellation < handle
             data = jsondecode(str);
             dataThis = [];
 
-            for i = 1:length(data)
-                if strcmpi(data(i).name, code)
-                    dataThis = data(i);
+            for dataIdx = data
+                if strcmpi(dataIdx.name, code)
+                    dataThis = dataIdx;
                     break
                 end
             end
@@ -38,71 +38,67 @@ classdef Constellation < handle
                 return
             end
 
-            for i = 1:size(dataThis.Walkers, 1)
-                group.inclination = deg2rad(dataThis.Walkers(i, 1));        % наклонение орбитальной плоскости
-                group.satsPerPlane = dataThis.Walkers(i, 2);				% число КА в каждой орбитальной плоскости группы
-                group.planeCount = dataThis.Walkers(i, 3);					% число орбитальных плоскостей в группе
-                group.f = dataThis.Walkers(i, 4);							% фазовый сдвиг по аргументу широты между КА в соседних плоскостях
-                group.altitude = dataThis.Walkers(i, 5);					% высота орбиты
-                group.maxRaan = deg2rad(dataThis.Walkers(i, 6));            % максимум прямого восхождения восходящего узла (при распределении орбитальных плоскостей)
-                group.startRaan = deg2rad(dataThis.Walkers(i, 7));			% прямое восхождение восходящего узла для первой плоскости
-                group.totalSatCount = group.satsPerPlane * group.planeCount;
-
-                this.groups{length(this.groups) + 1} = group;                
-                this.totalSatCount = this.totalSatCount + group.totalSatCount;
+            for idx = 1:size(dataThis.Walkers, 1)
+                this.groupArray{idx}.inclination = deg2rad(dataThis.Walkers(idx, 1));            % наклонение орбитальной плоскости
+                this.groupArray{idx}.satPerPlaneCount = dataThis.Walkers(idx, 2);                % число КА в каждой орбитальной плоскости группы
+                this.groupArray{idx}.planeCount = dataThis.Walkers(idx, 3);                      % число орбитальных плоскостей в группе
+                this.groupArray{idx}.phaseShift = dataThis.Walkers(idx, 4);                      % фазовый сдвиг по аргументу широты между КА в соседних плоскостях
+                this.groupArray{idx}.altitudeKilometers = dataThis.Walkers(idx, 5);              % высота орбиты над поверхностью земли [km]
+                this.groupArray{idx}.maxRaan = deg2rad(dataThis.Walkers(idx, 6));                % максимум прямого восхождения восходящего узла (при распределении орбитальных плоскостей)
+                this.groupArray{idx}.startRaan = deg2rad(dataThis.Walkers(idx, 7));              % прямое восхождение восходящего узла для первой плоскости
+                this.groupArray{idx}.totalSatCount = ...
+                    this.groupArray{idx}.satPerPlaneCount * this.groupArray{idx}.planeCount;     % общее число КА в группе
+                
+                this.totalSatCount = this.totalSatCount + this.groupArray{idx}.totalSatCount;
             end
         end
 
-        function getInitialState(this)
-            this.state.elements = zeros(this.totalSatCount, 6);
+        function calcInitialState(this)
+            this.state.elements = zeros(this.totalSatCount, 4);
             shift = 1;
 
-            for group = this.groups
-                for i = 1:length(group{1})
-                    ending = shift + group{1}(i).totalSatCount - 1;
-                    this.state.elements(shift:ending,:) = this.getInitialElements(group{1});
-                    shift = ending + 1;
-                end
+            for groupIdx = this.groupArray
+                ending = shift + groupIdx{1}.totalSatCount - 1;
+                this.state.elements(shift:ending,:) = this.calcInitialElements(groupIdx{1});
+                shift = ending + 1;
             end
         end
 
-        function elements = getInitialElements(this, group)
-            raans = linspace(group.startRaan, group.startRaan + group.maxRaan, group.planeCount + 1);
-            raans = mod(raans(1:end-1), 2 * pi);
+        function elements = calcInitialElements(this, group)
+            raanArray = linspace(group.startRaan, group.startRaan + group.maxRaan, group.planeCount + 1);
+            raanArray = mod(raanArray(1:end-1), 2 * pi);
 
-            elements = zeros(group.totalSatCount, 6);
-            idx = 1;
-            raanIDX = 0;
-            for raan = raans
-                for i = 0:group.satsPerPlane-1
-                    sma = this.earthRadius + group.altitude * 1000;
-                    aol = 2 * pi / group.satsPerPlane * i + 2 * pi / group.totalSatCount * group.f * raanIDX;
+            elements = zeros(group.totalSatCount, 4);
+            satNumber = 1;
+            for planeIdx = 1:group.planeCount
+                for satIdx = 1:group.satPerPlaneCount
+                    planeRadius = this.earthRadius + group.altitudeKilometers * 1000;
+                    directionAngle = 2 * pi / group.satPerPlaneCount * (satIdx - 1) + 2 * pi / group.totalSatCount * group.phaseShift * (planeIdx - 1);
 
-                    elements(idx, :) = [sma, 0, 0, raan, group.inclination, aol];
-                    idx = idx + 1;
-                end
-                raanIDX = raanIDX + 1;
-            end
+                    elements(satNumber, :) = [planeRadius, raanArray(planeIdx), group.inclination, directionAngle];
+                    satNumber = satNumber + 1;
+                end % конец цикла по КА
+            end % конец цикла по орбитам
         end        
 
-        function propagateJ2(this, epochs)
-            this.state.eci = zeros(this.totalSatCount, 3, length(epochs));
+        function propagateJ2(this, epochArray)
+            this.state.eci = zeros(this.totalSatCount, 3, length(epochArray));
 
-            sma         = this.state.elements(:, 1);
-            inclination = this.state.elements(:, 5);            
-            raan0       = this.state.elements(:, 4);
-            aol0        = this.state.elements(:, 6);
+            planeRadius              = this.state.elements(:, 1);
+            inclination              = this.state.elements(:, 3);            
+            raanZeroEpoch            = this.state.elements(:, 2);
+            directionAngleZeroEpoch  = this.state.elements(:, 4);
 
-            raanPrecessionRate = -1.5 * (this.earthJ2 * this.earthGM^(1/2) * this.earthRadius^2) ./ (sma.^(7/2)) .* cos(inclination);
-            draconicOmega      = sqrt(this.earthGM ./ sma.^3) .* (1 - 1.5 * this.earthJ2 .* (this.earthRadius ./ sma).^2) .* (1 - 4 .* cos(inclination).^2);
+            raanPrecessionRate = -1.5 * (this.earthJ2 * this.earthGM^(1/2) * this.earthRadius^2) ./ (planeRadius.^(7/2)) .* cos(inclination);
+            draconicOmega      = sqrt(this.earthGM ./ planeRadius.^3) .* (1 - 1.5 * this.earthJ2 .* (this.earthRadius ./ planeRadius).^2) .* (1 - 4 .* cos(inclination).^2);
 
-            for epochIdx = 1:length(epochs)
-                aol = aol0 + epochs(epochIdx) * draconicOmega;
-                raanOmega = raan0 + epochs(epochIdx) * raanPrecessionRate;
+            for epochIdx = 1:length(epochArray)
+                directionAngle = directionAngleZeroEpoch + epochArray(epochIdx) * draconicOmega;
+                raanOmega = raanZeroEpoch + epochArray(epochIdx) * raanPrecessionRate;
 
-                this.state.eci(:, :, epochIdx)  = [sma .* (cos(aol) .* cos(raanOmega) - sin(aol) .* cos(inclination) .* sin(raanOmega)), ...
-                                                   sma .* (cos(aol) .* sin(raanOmega) + sin(aol) .* cos(inclination) .* cos(raanOmega)), ...
-                                                   sma .* (sin(aol) .* sin(inclination))];
+                this.state.xyzCoordinate(:, :, epochIdx)  = [planeRadius .* (cos(directionAngle) .* cos(raanOmega) - sin(directionAngle) .* cos(inclination) .* sin(raanOmega)), ...
+                                                             planeRadius .* (cos(directionAngle) .* sin(raanOmega) + sin(directionAngle) .* cos(inclination) .* cos(raanOmega)), ...
+                                                             planeRadius .* (sin(directionAngle) .* sin(inclination))];
             end
         end
     end
