@@ -1,11 +1,12 @@
-function initInitialState(this)
-    this.state.elements = zeros(this.totalSatCount, 6);
+function initInitialState(constellation)
+% Инициализация состояния космической группировки в начальный момент времени
+    constellation.state.elements = zeros(constellation.totalSatCount, 6);
 
     shift = 1;
-    for groupIdx = 1 : numel(this.groups)
-        thisGroup = this.groups{groupIdx};
+    for groupIdx = 1 : numel(constellation.groups)
+        thisGroup = constellation.groups{groupIdx};
         ending = shift + thisGroup.totalSatCount - 1;
-        this.state.elements(shift:ending,:) = this.initGroupElements(thisGroup);
+        constellation.state.elements(shift:ending,:) = constellation.initGroupElements(thisGroup);
         shift = ending + 1;
     end
 end

@@ -1,4 +1,6 @@
 function propagateJ2(constellation, epochs)
+% Расчет орбит космической группировки в заданные моменты времени
+% Используется J2 пропагатор
     constellation.state.eci = zeros(constellation.totalSatCount, 3, length(epochs));
     
     sma         = constellation.state.elements(:, 1);
@@ -23,4 +25,5 @@ function propagateJ2(constellation, epochs)
              sma .* (cos(aol) .* sin(raanOmega) + sin(aol) .* cos(inclination) .* cos(raanOmega)), ...
              sma .* (sin(aol) .* sin(inclination))];
     end
+    constellation.state.epochs = epochs;
 end

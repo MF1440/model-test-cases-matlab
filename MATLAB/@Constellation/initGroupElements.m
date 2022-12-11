@@ -1,5 +1,5 @@
 function elements = initGroupElements(group)
-
+% Инициализация параметров элементов группы космических аппаратов
     metersPerKm = 1000;
 
     raans = linspace(group.startRaan, group.startRaan + group.maxRaan, group.planeCount + 1);
