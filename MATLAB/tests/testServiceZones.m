@@ -35,7 +35,7 @@ testEpochIdx = 1;
 testEpoch = epochs(testEpochIdx);
 
 % Вычисление сервисных зон
-serviceZones  = calcServiceZones(stationsEcefCoords, stationsTrafficArray, ...
+serviceZones  = ServiceZones.calcServiceZones(stationsEcefCoords, stationsTrafficArray, ...
     constellation.state.eci(:,:,testEpochIdx), testEpoch);
 
 toc
@@ -45,7 +45,7 @@ isVisualizationNeeded = true;
 if isVisualizationNeeded
     satVisIdx = 1;
     visualizeTestResults(stationsEcefCoords, constellation.state.eci(:,:,testEpochIdx), ...
-        serviceZones.seriveSatIndexes, testEpoch, satVisIdx)
+        serviceZones.serviceSatIndexes, testEpoch, satVisIdx)
 end
 
 

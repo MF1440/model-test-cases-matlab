@@ -5,8 +5,8 @@ function serviceZones = calcServiceZones(stationsEcef, stationsTrafficArray, sat
 % Положение наземных станций определяется массивом stationsEcef, траффик 
 % через данную станцию - массив stationsTrafficArray 
 % На выходе функция возвращает структуру serviceZones
-% serviceZones.nearestSatIndexes - номер спутника к обслуживающей зоне которого относится данная станция
-% satsTrafficArray - суммарный трафиик, проходящий в данной зоне
+% serviceZones.serviceSatIndexes - номер спутника к обслуживающей зоне которого относится данная станция
+% serviceZones.satsTrafficArray - суммарный трафиик в данной зоне
 
     serviceZones.seriveSatIndexes = zeros(size(stationsEcef, 1), 1);
     serviceZones.satsTrafficArray = zeros(size(stationsEcef, 1), 1);
@@ -16,18 +16,18 @@ function serviceZones = calcServiceZones(stationsEcef, stationsTrafficArray, sat
     [satsLon,     satsLat,     ~] = cart2sph(satsEcef(:,1),     satsEcef(:,2),     satsEcef(:,3));    
     [stationsLon, stationsLat, ~] = cart2sph(stationsEcef(:,1), stationsEcef(:,2), stationsEcef(:,3));
     
-    sinLat1 = sin(satsLat);
-    cosLat1 = cos(satsLat);
+    satsSinLat = sin(satsLat);
+    satsCosLat = cos(satsLat);
     
     stationsCount = length(stationsTrafficArray);
 
     for stationIdx = 1:stationsCount
         % Вычисление центрального угла между даной станцией и спутником
-        angle = (sinLat1 * sin(stationsLat(stationIdx)) + ...
-                (cosLat1 * cos(stationsLat(stationIdx))) .* cos(satsLon - stationsLon(stationIdx)));
+        angle = (satsSinLat * sin(stationsLat(stationIdx)) + ...
+                (satsCosLat * cos(stationsLat(stationIdx))) .* cos(satsLon - stationsLon(stationIdx)));
         [~, indMin] = max(angle);
-        % Спутник, обслуживающий станцию, определяется на основании минимума расстояния от станции до подспутниковой точки
-        serviceZones.seriveSatIndexes(stationIdx) = indMin;
+        % Зона обслуживания станции определяется на основании минимума расстояния от станции до подспутниковой точки
+        serviceZones.serviceSatIndexes(stationIdx) = indMin;
         serviceZones.satsTrafficArray(indMin) = serviceZones.satsTrafficArray(indMin) + stationsTrafficArray(stationIdx);
     end
 
