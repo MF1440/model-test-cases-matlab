@@ -4,11 +4,6 @@ classdef Constellation < handle
         totalSatCount = 0;
         groups = {};
         state;
-
-        % константы
-        earthRadius = 6378135;           % Экваториальный радиус Земли [m]
-        earthGM = 3.986004415e+14;       % Гравитационный параметр Земли [m3/s2]
-        earthJ2 = 1.082626e-3;           % Вторая зональная гармоника геопотенциала
     end
 
     methods
@@ -67,6 +62,9 @@ classdef Constellation < handle
         end
 
         function elements = getInitialElements(this, group)
+            
+            earthRadius = Constants.AstroConstants.earthRadius;
+
             raans = linspace(group.startRaan, group.startRaan + group.maxRaan, group.planeCount + 1);
             raans = mod(raans(1:end-1), 2 * pi);
 
@@ -75,7 +73,7 @@ classdef Constellation < handle
             raanIDX = 0;
             for raan = raans
                 for i = 0:group.satsPerPlane-1
-                    sma = this.earthRadius + group.altitude * 1000;
+                    sma = earthRadius + group.altitude * 1000;
                     aol = 2 * pi / group.satsPerPlane * i + 2 * pi / group.totalSatCount * group.f * raanIDX;
 
                     elements(idx, :) = [sma, 0, 0, raan, group.inclination, aol];
@@ -93,8 +91,12 @@ classdef Constellation < handle
             raan0       = this.state.elements(:, 4);
             aol0        = this.state.elements(:, 6);
 
-            raanPrecessionRate = -1.5 * (this.earthJ2 * this.earthGM^(1/2) * this.earthRadius^2) ./ (sma.^(7/2)) .* cos(inclination);
-            draconicOmega      = sqrt(this.earthGM ./ sma.^3) .* (1 - 1.5 * this.earthJ2 .* (this.earthRadius ./ sma).^2) .* (1 - 4 .* cos(inclination).^2);
+            earthJ2     = Constants.AstroConstants.earthJ2;
+            earthGM     = Constants.AstroConstants.earthGM;
+            earthRadius = Constants.AstroConstants.earthRadius;
+
+            raanPrecessionRate = -1.5 * (earthJ2 * earthGM^(1/2) * earthRadius^2) ./ (sma.^(7/2)) .* cos(inclination);
+            draconicOmega      = sqrt(earthGM ./ sma.^3) .* (1 - 1.5 * earthJ2 .* (earthRadius ./ sma).^2) .* (1 - 4 .* cos(inclination).^2);
 
             for epochIdx = 1:length(epochs)
                 aol = aol0 + epochs(epochIdx) * draconicOmega;
