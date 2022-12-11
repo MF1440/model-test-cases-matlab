@@ -2,8 +2,10 @@ clc
 clear
 
 tic
-%создание объекта типа Constellation, инициализация параметрами группировки Stalink из конфига
-constellation = Constellation('Starlink');
+% Создание объекта типа Constellation, инициализация параметрами группировки Starlink из конфига
+constellationConfigFileName = '../data/constellationsTest.json';
+constellationName = 'Starlink';
+constellation = Constellation(constellationConfigFileName, constellationName);
 
 %вычисление элементов орбиты для всех КА в начальный момент
 constellation.getInitialState();
