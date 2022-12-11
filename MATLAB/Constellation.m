@@ -82,30 +82,5 @@ classdef Constellation < handle
                 raanIDX = raanIDX + 1;
             end
         end        
-
-        function propagateJ2(this, epochs)
-            this.state.eci = zeros(this.totalSatCount, 3, length(epochs));
-
-            sma         = this.state.elements(:, 1);
-            inclination = this.state.elements(:, 5);            
-            raan0       = this.state.elements(:, 4);
-            aol0        = this.state.elements(:, 6);
-
-            earthJ2     = Constants.AstroConstants.earthJ2;
-            earthGM     = Constants.AstroConstants.earthGM;
-            earthRadius = Constants.AstroConstants.earthRadius;
-
-            raanPrecessionRate = -1.5 * (earthJ2 * earthGM^(1/2) * earthRadius^2) ./ (sma.^(7/2)) .* cos(inclination);
-            draconicOmega      = sqrt(earthGM ./ sma.^3) .* (1 - 1.5 * earthJ2 .* (earthRadius ./ sma).^2) .* (1 - 4 .* cos(inclination).^2);
-
-            for epochIdx = 1:length(epochs)
-                aol = aol0 + epochs(epochIdx) * draconicOmega;
-                raanOmega = raan0 + epochs(epochIdx) * raanPrecessionRate;
-
-                this.state.eci(:, :, epochIdx)  = [sma .* (cos(aol) .* cos(raanOmega) - sin(aol) .* cos(inclination) .* sin(raanOmega)), ...
-                                                   sma .* (cos(aol) .* sin(raanOmega) + sin(aol) .* cos(inclination) .* cos(raanOmega)), ...
-                                                   sma .* (sin(aol) .* sin(inclination))];
-            end
-        end
     end
 end

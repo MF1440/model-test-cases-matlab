@@ -12,7 +12,7 @@ constellation.getInitialState();
 epochs = (0: 1000: 6000);
 
 % расчёт положений всех КА в заданные моменты времени
-constellation.propagateJ2(epochs);
+OrbitPropagators.propagateJ2(constellation, epochs)
 
 % Координаты случайного КА (в инерциальных осях) после этого можно прочитать из constellation.state.eci
 satIdx = ceil(constellation.totalSatCount * rand());
