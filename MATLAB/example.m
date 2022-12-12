@@ -23,6 +23,6 @@ constellation.propagateJ2(epochs);
 satIdx = ceil(constellation.totalSatCount * rand());
 epochIdx = ceil(length(epochs) * rand());
 disp(['Положение КА-' num2str(satIdx) ' на эпоху ' num2str(epochs(epochIdx)) ':']);
-disp(constellation.state.xyzCoordinate(satIdx, :, epochIdx));
+disp(constellation.state.ecefPosition(satIdx, :, epochIdx));
 
 toc

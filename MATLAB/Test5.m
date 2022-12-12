@@ -13,13 +13,14 @@ constellation = Constellation('Starlink');
 constellation.calcInitialState();
 
 % Определение точек на оси времени, в которые будут производиться расчёты
-epochs = (0: 1000: 2000);
+%epochs = (0: 1000: 2000);
+epochs = 0;
 
 % Расчёт положений всех КА в заданные моменты времени
 constellation.propagateJ2(epochs);
 
 % Создание объекта типа Traffic
-traffic = Traffic(constellation.state.xyzCoordinate,'testDataFile.mat');
+traffic = Traffic(constellation.state.ecefPosition,'testDataFile.mat');
 
 % Распределение пользователей по спутникам
 traffic.calcSatTraffic();

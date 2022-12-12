@@ -13,11 +13,11 @@ classdef Constellation < handle
 
     methods
 
-        function objConstel = Constellation(varargin)
+        function this = Constellation(varargin)
             if isempty(varargin)
                 return
             end
-            objConstel.loadFromConfigFile(varargin{1});
+            this.loadFromConfigFile(varargin{1});
         end
 
         function loadFromConfigFile(this, code)
@@ -82,7 +82,7 @@ classdef Constellation < handle
         end        
 
         function propagateJ2(this, epochArray)
-            this.state.eci = zeros(this.totalSatCount, 3, length(epochArray));
+            this.state.ecefPosition = zeros(this.totalSatCount, 3, length(epochArray));
 
             planeRadius              = this.state.elements(:, 1);
             inclination              = this.state.elements(:, 3);            
@@ -96,7 +96,7 @@ classdef Constellation < handle
                 directionAngle = directionAngleZeroEpoch + epochArray(epochIdx) * draconicOmega;
                 raanOmega = raanZeroEpoch + epochArray(epochIdx) * raanPrecessionRate;
 
-                this.state.xyzCoordinate(:, :, epochIdx)  = [planeRadius .* (cos(directionAngle) .* cos(raanOmega) - sin(directionAngle) .* cos(inclination) .* sin(raanOmega)), ...
+                this.state.ecefPosition(:, :, epochIdx)  = [planeRadius .* (cos(directionAngle) .* cos(raanOmega) - sin(directionAngle) .* cos(inclination) .* sin(raanOmega)), ...
                                                              planeRadius .* (cos(directionAngle) .* sin(raanOmega) + sin(directionAngle) .* cos(inclination) .* cos(raanOmega)), ...
                                                              planeRadius .* (sin(directionAngle) .* sin(inclination))];
             end

@@ -15,7 +15,7 @@ classdef Traffic < handle
                 return
             end
             objTraffic.loadUserData(userDataFileName);
-            objTraffic.satDataOnEarth(satData);
+            objTraffic.calcSatDataOnEarth(satData);
         end
 
         function loadUserData(this, fileName)
@@ -30,7 +30,7 @@ classdef Traffic < handle
             this.userState.userTraffic = userData.values;
         end
 
-        function satDataOnEarth(this, satData)
+        function calcSatDataOnEarth(this, satData)
 
             if isempty(satData)
                 disp('Данные КА не найдены');
@@ -42,9 +42,9 @@ classdef Traffic < handle
             tetaAngle = atan(sqrt(satData(:, 1, :) .^2 + satData(:, 2, :) .^2) ./ satData(:, 3, :));
             phiAngle = atan(satData(:, 2, :) ./ satData(:, 1, :));
 
-            this.satState.satOnEarth = [this.earthRadius .* sin(tetaAngle) .* cos(phiAngle), ...
-                                        this.earthRadius .* sin(tetaAngle) .* sin(phiAngle), ...
-                                        this.earthRadius .* cos(tetaAngle)];
+            this.satState.satOnEarth = [sign(satData(:, 1, :)) .* abs(this.earthRadius .* sin(tetaAngle) .* cos(phiAngle)), ...
+                                        sign(satData(:, 2, :)) .* abs(this.earthRadius .* sin(tetaAngle) .* sin(phiAngle)), ...
+                                        sign(satData(:, 3, :)) .* abs(this.earthRadius .* cos(tetaAngle))];
 
         end
 
@@ -55,9 +55,10 @@ classdef Traffic < handle
 
             for epochIdx = 1:length(this.satState.satOnEarth(1, 1, :))
                 for userIdx = 1:length(this.userState.userLocation(:, 1))                   
-                    distance = sqrt((this.userState.userLocation(userIdx, 1) - this.satState.satOnEarth(:, 1, epochIdx)) .^2 + ...
-                                    (this.userState.userLocation(userIdx, 2) - this.satState.satOnEarth(:, 2, epochIdx)) .^2 + ...
-                                    (this.userState.userLocation(userIdx, 3) - this.satState.satOnEarth(:, 3, epochIdx)) .^2);
+                    distance = (this.userState.userLocation(userIdx, 1) - this.satState.satOnEarth(:, 1, epochIdx)) .^2 + ...
+                               (this.userState.userLocation(userIdx, 2) - this.satState.satOnEarth(:, 2, epochIdx)) .^2 + ...
+                               (this.userState.userLocation(userIdx, 3) - this.satState.satOnEarth(:, 3, epochIdx)) .^2;
+
                     [~, satNum] = min(distance);
 
                     nearestSat(userIdx, epochIdx) = satNum;
