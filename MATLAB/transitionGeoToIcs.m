@@ -1,15 +1,15 @@
 function coordinatesIcs = transitionGeoToIcs(coordinatesGeo,epoch)
-% Функция перехода из географической в инерциальную систему
-% координат 
-% coordinatesGeo = [lat,lon] - Географические координаты,
-% pointRadius - Радиус сферы. (можно брать радиус Земли или радиус орбиты)
-% coordinatesICS = [X,Y,Z] - координаты неподвижной ИСК 
+% Р¤СѓРЅРєС†РёСЏ РїРµСЂРµС…РѕРґР° РёР· РіРµРѕРіСЂР°С„РёС‡РµСЃРєРѕР№ РІ РёРЅРµСЂС†РёР°Р»СЊРЅСѓСЋ СЃРёСЃС‚РµРјСѓ
+% РєРѕРѕСЂРґРёРЅР°С‚ 
+% coordinatesGeo = [lat,lon] - Р“РµРѕРіСЂР°С„РёС‡РµСЃРєРёРµ РєРѕРѕСЂРґРёРЅР°С‚С‹,
+% pointRadius - Р Р°РґРёСѓСЃ СЃС„РµСЂС‹. (РјРѕР¶РЅРѕ Р±СЂР°С‚СЊ СЂР°РґРёСѓСЃ Р—РµРјР»Рё РёР»Рё СЂР°РґРёСѓСЃ РѕСЂР±РёС‚С‹)
+% coordinatesICS = [X,Y,Z] - РєРѕРѕСЂРґРёРЅР°С‚С‹ РЅРµРїРѕРґРІРёР¶РЅРѕР№ РРЎРљ 
 
-    % константы
-    earthRadius = 6378135;           % Экваториальный радиус Земли [m]
-    earthRotV = 7.292115e-5;         % Угловая скорость вращения Земли [рад/c]
+    % РєРѕРЅСЃС‚Р°РЅС‚С‹
+    earthRadius = 6378135;           % Р­РєРІР°С‚РѕСЂРёР°Р»СЊРЅС‹Р№ СЂР°РґРёСѓСЃ Р—РµРјР»Рё [m]
+    earthRotV = 7.292115e-5;         % РЈРіР»РѕРІР°СЏ СЃРєРѕСЂРѕСЃС‚СЊ РІСЂР°С‰РµРЅРёСЏ Р—РµРјР»Рё [СЂР°Рґ/c]
  
-    % Получение координат в неподвижной ИСК 
+    % РџРѕР»СѓС‡РµРЅРёРµ РєРѕРѕСЂРґРёРЅР°С‚ РІ РЅРµРїРѕРґРІРёР¶РЅРѕР№ РРЎРљ 
     coordinatesIcsn(1,1) = earthRadius ...
                            * cosd(coordinatesGeo(1)) ...
                            * cosd(coordinatesGeo(2)); % X
@@ -19,13 +19,13 @@ function coordinatesIcs = transitionGeoToIcs(coordinatesGeo,epoch)
     coordinatesIcsn(1,3) = earthRadius ... 
                            * sind(coordinatesGeo(1)); % Z
 
-    %  Угол поворота Земли на текущую эпоху
+    %  РЈРіРѕР» РїРѕРІРѕСЂРѕС‚Р° Р—РµРјР»Рё РЅР° С‚РµРєСѓС‰СѓСЋ СЌРїРѕС…Сѓ
     angleRotationEarth = epoch * earthRotV;
   
-    % Матрица перехода из неподвижной ИСК в подвижную ИСК
+    % РњР°С‚СЂРёС†Р° РїРµСЂРµС…РѕРґР° РёР· РЅРµРїРѕРґРІРёР¶РЅРѕР№ РРЎРљ РІ РїРѕРґРІРёР¶РЅСѓСЋ РРЎРљ
     transferMatrixToRotationICS = [cos(angleRotationEarth) -sin(angleRotationEarth)  0;...
                                    sin(angleRotationEarth)  cos(angleRotationEarth)  0;...
                                    0                        0                        1];
-    % Получение координат в подвижной ИСК                              
+    % РџРѕР»СѓС‡РµРЅРёРµ РєРѕРѕСЂРґРёРЅР°С‚ РІ РїРѕРґРІРёР¶РЅРѕР№ РРЎРљ                              
     coordinatesIcs= coordinatesIcsn*transferMatrixToRotationICS';                         
 end
