@@ -1,12 +1,12 @@
 function maxDistance = calcMaxDistance(earthRadius, orbitHeight, elevationMinAngle)
-% Функция находит максимальную дистанцию видимости(наклонную дальность) между КА и ШС. 
-% earthRadius - радиус Земли,
-% orbitHeight - высота орбиты КА,
-% elevationMinAngle - минимальный угол места ШС.
-% Maxdistance - максимальная дистанция видимости (соответствует
-% минимальному углу места)
+% Р¤СѓРЅРєС†РёСЏ РЅР°С…РѕРґРёС‚ РјР°РєСЃРёРјР°Р»СЊРЅСѓСЋ РґРёСЃС‚Р°РЅС†РёСЋ РІРёРґРёРјРѕСЃС‚Рё(РЅР°РєР»РѕРЅРЅСѓСЋ РґР°Р»СЊРЅРѕСЃС‚СЊ) РјРµР¶РґСѓ РљРђ Рё РЁРЎ. 
+% earthRadius - СЂР°РґРёСѓСЃ Р—РµРјР»Рё,
+% orbitHeight - РІС‹СЃРѕС‚Р° РѕСЂР±РёС‚С‹ РљРђ,
+% elevationMinAngle - РјРёРЅРёРјР°Р»СЊРЅС‹Р№ СѓРіРѕР» РјРµСЃС‚Р° РЁРЎ.
+% Maxdistance - РјР°РєСЃРёРјР°Р»СЊРЅР°СЏ РґРёСЃС‚Р°РЅС†РёСЏ РІРёРґРёРјРѕСЃС‚Рё (СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓРµС‚
+% РјРёРЅРёРјР°Р»СЊРЅРѕРјСѓ СѓРіР»Сѓ РјРµСЃС‚Р°)
  
-    satelliteViewAngle = asind( (earthRadius * sind (90 + elevationMinAngle))/( earthRadius + orbitHeight) ); % Угол обзора КА
-    centralEarthAngle  = 180 - (90 + elevationMinAngle) - satelliteViewAngle; % Центральный угол из центра Земли
-    maxDistance        = earthRadius * sind(centralEarthAngle) / sind(satelliteViewAngle); % Максимальная наклонная дальность    
+    satelliteViewAngle = asind( (earthRadius * sind (90 + elevationMinAngle))/( earthRadius + orbitHeight) ); % РЈРіРѕР» РѕР±Р·РѕСЂР° РљРђ
+    centralEarthAngle  = 180 - (90 + elevationMinAngle) - satelliteViewAngle; % Р¦РµРЅС‚СЂР°Р»СЊРЅС‹Р№ СѓРіРѕР» РёР· С†РµРЅС‚СЂР° Р—РµРјР»Рё
+    maxDistance        = earthRadius * sind(centralEarthAngle) / sind(satelliteViewAngle); % РњР°РєСЃРёРјР°Р»СЊРЅР°СЏ РЅР°РєР»РѕРЅРЅР°СЏ РґР°Р»СЊРЅРѕСЃС‚СЊ    
 end
