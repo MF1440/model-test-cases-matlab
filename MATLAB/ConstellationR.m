@@ -5,21 +5,21 @@ classdef ConstellationR < handle
         groupList = {}; % CodeReview (1.1.6)
         state;
 
-        % êîíñòàíòû
-        earthRadius = 6378135;           % Ýêâàòîðèàëüíûé ðàäèóñ Çåìëè [ì]  % CodeReview (3.4.1)
-        earthGM = 3.986004415e+14;       % Ãðàâèòàöèîííûé ïàðàìåòð Çåìëè [ì3/ñ2] % CodeReview (3.4.1)
-        earthJ2 = 1.082626e-3;           % Âòîðàÿ çîíàëüíàÿ ãàðìîíèêà ãåîïîòåíöèàëà [áð] % CodeReview (3.4.9)
+        % ÐºÐ¾Ð½ÑÑ‚Ð°Ð½Ñ‚Ñ‹
+        earthRadius = 6378135;           % Ð­ÐºÐ²Ð°Ñ‚Ð¾Ñ€Ð¸Ð°Ð»ÑŒÐ½Ñ‹Ð¹ Ñ€Ð°Ð´Ð¸ÑƒÑ Ð—ÐµÐ¼Ð»Ð¸ [Ð¼]  % CodeReview (3.4.1)
+        earthGM = 3.986004415e+14;       % Ð“Ñ€Ð°Ð²Ð¸Ñ‚Ð°Ñ†Ð¸Ð¾Ð½Ð½Ñ‹Ð¹ Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€ Ð—ÐµÐ¼Ð»Ð¸ [Ð¼3/Ñ2] % CodeReview (3.4.1)
+        earthJ2 = 1.082626e-3;           % Ð’Ñ‚Ð¾Ñ€Ð°Ñ Ð·Ð¾Ð½Ð°Ð»ÑŒÐ½Ð°Ñ Ð³Ð°Ñ€Ð¼Ð¾Ð½Ð¸ÐºÐ° Ð³ÐµÐ¾Ð¿Ð¾Ñ‚ÐµÐ½Ñ†Ð¸Ð°Ð»Ð° [Ð±Ñ€] % CodeReview (3.4.9)
     end
 
     methods
 
         function this = Constellation(varargin) % CodeReview (3.4.6)
             if isempty(varargin)
-			disp('Èìÿ ãðóïïèðîâêè íå íàéäåíî'); %  CodeReview (àíàëîãè÷íî isempty(dataGroup))
+			disp('Ð˜Ð¼Ñ Ð³Ñ€ÑƒÐ¿Ð¿Ð¸Ñ€Ð¾Ð²ÐºÐ¸ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ð¾'); %  CodeReview (Ð°Ð½Ð°Ð»Ð¾Ð³Ð¸Ñ‡Ð½Ð¾ isempty(dataGroup))
                 return
             end
             groupName = varargin{1};
-            this.loadFromConfigFile(groupName); % Èìÿ ãðóïïèðîâêè CodeReview (3.4.6)
+            this.loadFromConfigFile(groupName); % Ð˜Ð¼Ñ Ð³Ñ€ÑƒÐ¿Ð¿Ð¸Ñ€Ð¾Ð²ÐºÐ¸ CodeReview (3.4.6)
         end
 
         function loadFromConfigFile(this, code)
@@ -36,19 +36,19 @@ classdef ConstellationR < handle
             end
 
             if isempty(dataGroup)
-                disp('Ãðóïïèðîâêà íå íàéäåíà â ôàéëå');
+                disp('Ð“Ñ€ÑƒÐ¿Ð¿Ð¸Ñ€Ð¾Ð²ÐºÐ° Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ð° Ð² Ñ„Ð°Ð¹Ð»Ðµ');
                 return
             end
 
             for i = 1:size(dataGroup.Walkers, 1)
-                group.inclination = deg2rad(dataGroup.Walkers(i, 1));         % íàêëîíåíèå îðáèòàëüíîé ïëîñêîñòè []  CodeReview (3.4.9)
-                group.satsPerPlane = dataGroup.Walkers(i, 2);				  % ÷èñëî ÊÀ â êàæäîé îðáèòàëüíîé ïëîñêîñòè ãðóïïû [åä]  CodeReview (3.4.9)
-                group.planeCount = dataGroup.Walkers(i, 3);					  % ÷èñëî îðáèòàëüíûõ ïëîñêîñòåé â ãðóïïå [åä]  CodeReview (3.4.9)
-                group.latitudeShift = dataGroup.Walkers(i, 4);				  % ôàçîâûé ñäâèã ïî àðãóìåíòó øèðîòû ìåæäó ÊÀ â ñîñåäíèõ ïëîñêîñòÿõ [ãðàä]  CodeReview (3.4.9, 1.1.5)
-                group.altitude = dataGroup.Walkers(i, 5);					  % âûñîòà îðáèòû [êì]  CodeReview (3.4.9)
-                group.maxRaan = deg2rad(dataGroup.Walkers(i, 6));             % ìàêñèìóì ïðÿìîãî âîñõîæäåíèÿ âîñõîäÿùåãî óçëà (ïðè ðàñïðåäåëåíèè îðáèòàëüíûõ ïëîñêîñòåé) []  CodeReview (3.4.9)
-                group.startRaan = deg2rad(dataGroup.Walkers(i, 7));			  % ïðÿìîå âîñõîæäåíèå âîñõîäÿùåãî óçëà äëÿ ïåðâîé ïëîñêîñòè []  CodeReview (3.4.9)
-                group.totalSatCount = group.satsPerPlane * group.planeCount;  % ÷èñëî ÊÀ [åä] CodeReview (3.4)
+                group.inclination = deg2rad(dataGroup.Walkers(i, 1));         % Ð½Ð°ÐºÐ»Ð¾Ð½ÐµÐ½Ð¸Ðµ Ð¾Ñ€Ð±Ð¸Ñ‚Ð°Ð»ÑŒÐ½Ð¾Ð¹ Ð¿Ð»Ð¾ÑÐºÐ¾ÑÑ‚Ð¸ []  CodeReview (3.4.9)
+                group.satsPerPlane = dataGroup.Walkers(i, 2);                 % Ñ‡Ð¸ÑÐ»Ð¾ ÐšÐ Ð² ÐºÐ°Ð¶Ð´Ð¾Ð¹ Ð¾Ñ€Ð±Ð¸Ñ‚Ð°Ð»ÑŒÐ½Ð¾Ð¹ Ð¿Ð»Ð¾ÑÐºÐ¾ÑÑ‚Ð¸ Ð³Ñ€ÑƒÐ¿Ð¿Ñ‹ [ÐµÐ´]  CodeReview (3.4.9)
+                group.planeCount = dataGroup.Walkers(i, 3);                   % Ñ‡Ð¸ÑÐ»Ð¾ Ð¾Ñ€Ð±Ð¸Ñ‚Ð°Ð»ÑŒÐ½Ñ‹Ñ… Ð¿Ð»Ð¾ÑÐºÐ¾ÑÑ‚ÐµÐ¹ Ð² Ð³Ñ€ÑƒÐ¿Ð¿Ðµ [ÐµÐ´]  CodeReview (3.4.9)
+                group.latitudeShift = dataGroup.Walkers(i, 4);                % Ñ„Ð°Ð·Ð¾Ð²Ñ‹Ð¹ ÑÐ´Ð²Ð¸Ð³ Ð¿Ð¾ Ð°Ñ€Ð³ÑƒÐ¼ÐµÐ½Ñ‚Ñƒ ÑˆÐ¸Ñ€Ð¾Ñ‚Ñ‹ Ð¼ÐµÐ¶Ð´Ñƒ ÐšÐ Ð² ÑÐ¾ÑÐµÐ´Ð½Ð¸Ñ… Ð¿Ð»Ð¾ÑÐºÐ¾ÑÑ‚ÑÑ… [Ð³Ñ€Ð°Ð´]  CodeReview (3.4.9, 1.1.5)
+                group.altitude = dataGroup.Walkers(i, 5);                     % Ð²Ñ‹ÑÐ¾Ñ‚Ð° Ð¾Ñ€Ð±Ð¸Ñ‚Ñ‹ [ÐºÐ¼]  CodeReview (3.4.9)
+                group.maxRaan = deg2rad(dataGroup.Walkers(i, 6));             % Ð¼Ð°ÐºÑÐ¸Ð¼ÑƒÐ¼ Ð¿Ñ€ÑÐ¼Ð¾Ð³Ð¾ Ð²Ð¾ÑÑ…Ð¾Ð¶Ð´ÐµÐ½Ð¸Ñ Ð²Ð¾ÑÑ…Ð¾Ð´ÑÑ‰ÐµÐ³Ð¾ ÑƒÐ·Ð»Ð° (Ð¿Ñ€Ð¸ Ñ€Ð°ÑÐ¿Ñ€ÐµÐ´ÐµÐ»ÐµÐ½Ð¸Ð¸ Ð¾Ñ€Ð±Ð¸Ñ‚Ð°Ð»ÑŒÐ½Ñ‹Ñ… Ð¿Ð»Ð¾ÑÐºÐ¾ÑÑ‚ÐµÐ¹) []  CodeReview (3.4.9)
+                group.startRaan = deg2rad(dataGroup.Walkers(i, 7));           % Ð¿Ñ€ÑÐ¼Ð¾Ðµ Ð²Ð¾ÑÑ…Ð¾Ð¶Ð´ÐµÐ½Ð¸Ðµ Ð²Ð¾ÑÑ…Ð¾Ð´ÑÑ‰ÐµÐ³Ð¾ ÑƒÐ·Ð»Ð° Ð´Ð»Ñ Ð¿ÐµÑ€Ð²Ð¾Ð¹ Ð¿Ð»Ð¾ÑÐºÐ¾ÑÑ‚Ð¸ []  CodeReview (3.4.9)
+                group.totalSatCount = group.satsPerPlane * group.planeCount;  % Ñ‡Ð¸ÑÐ»Ð¾ ÐšÐ [ÐµÐ´] CodeReview (3.4)
 
                 this.groupList{length(this.groups) + 1} = group;                
                 this.totalSatCount = this.totalSatCount + group.totalSatCount;
@@ -90,8 +90,8 @@ classdef ConstellationR < handle
         function propagateJ2(this, epochsArray) % CodeReview (1.1.6)
             this.state.eci = zeros(this.totalSatCount, 3, length(epochsArray));
 
-            sma         = this.state.elements(:, 1);    % âûñîòà îðáèòû [ì] CodeReview (3.4)
-            inclination = this.state.elements(:, 5);    % íàêëîíåíèå îðáèòàëüíîé ïëîñêîñòè [] CodeReview (3.4)         
+            sma         = this.state.elements(:, 1);    % Ð²Ñ‹ÑÐ¾Ñ‚Ð° Ð¾Ñ€Ð±Ð¸Ñ‚Ñ‹ [Ð¼] CodeReview (3.4)
+            inclination = this.state.elements(:, 5);    % Ð½Ð°ÐºÐ»Ð¾Ð½ÐµÐ½Ð¸Ðµ Ð¾Ñ€Ð±Ð¸Ñ‚Ð°Ð»ÑŒÐ½Ð¾Ð¹ Ð¿Ð»Ð¾ÑÐºÐ¾ÑÑ‚Ð¸ [] CodeReview (3.4)         
             raan0       = this.state.elements(:, 4);    %  [] CodeReview (3.4)
             aol0        = this.state.elements(:, 6);    %  [] CodeReview (3.4)
 
