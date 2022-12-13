@@ -1,100 +1,100 @@
 function visiblesArray = findGatewayVisible(constellation, epochArray, epochIdx)
-% Функция определяет видимые КА для шлюзовых станций (ШС)  в заданный момент
-% времени. Функция возвращает массив данных с указанием номера КА, номера
-% ШС, угол места и азимут антены, а так же доплеровский сдвиг частоты
-% радиосигнала.
+% Р¤СѓРЅРєС†РёСЏ РѕРїСЂРµРґРµР»СЏРµС‚ РІРёРґРёРјС‹Рµ РљРђ РґР»СЏ С€Р»СЋР·РѕРІС‹С… СЃС‚Р°РЅС†РёР№ (РЁРЎ)  РІ Р·Р°РґР°РЅРЅС‹Р№ РјРѕРјРµРЅС‚
+% РІСЂРµРјРµРЅРё. Р¤СѓРЅРєС†РёСЏ РІРѕР·РІСЂР°С‰Р°РµС‚ РјР°СЃСЃРёРІ РґР°РЅРЅС‹С… СЃ СѓРєР°Р·Р°РЅРёРµРј РЅРѕРјРµСЂР° РљРђ, РЅРѕРјРµСЂР°
+% РЁРЎ, СѓРіРѕР» РјРµСЃС‚Р° Рё Р°Р·РёРјСѓС‚ Р°РЅС‚РµРЅС‹, Р° С‚Р°Рє Р¶Рµ РґРѕРїР»РµСЂРѕРІСЃРєРёР№ СЃРґРІРёРі С‡Р°СЃС‚РѕС‚С‹
+% СЂР°РґРёРѕСЃРёРіРЅР°Р»Р°.
 
- % Константы
-    earthRadius = 6378135;           % Экваториальный радиус Земли [м]
-    elevationMinAngle = 25;          % Минимальный угол места [град]
-    pointSpeedLight = 299792458;     % Скорость света [м/с]
-    carrierFrequency= 433e6;         % Несущая частота [Гц]
+    % РљРѕРЅСЃС‚Р°РЅС‚С‹
+    earthRadius = 6378135;           % Р­РєРІР°С‚РѕСЂРёР°Р»СЊРЅС‹Р№ СЂР°РґРёСѓСЃ Р—РµРјР»Рё [Рј]
+    elevationMinAngle = 25;          % РњРёРЅРёРјР°Р»СЊРЅС‹Р№ СѓРіРѕР» РјРµСЃС‚Р° [РіСЂР°Рґ]
+    pointSpeedLight = 299792458;     % РЎРєРѕСЂРѕСЃС‚СЊ СЃРІРµС‚Р° [Рј/СЃ]
+    carrierFrequency= 433e6;         % РќРµСЃСѓС‰Р°СЏ С‡Р°СЃС‚РѕС‚Р° [Р“С†]
         
-    % Получение географических координат шлюзовых станций (ШС) в начальный момент времени [град]
+    % РџРѕР»СѓС‡РµРЅРёРµ РіРµРѕРіСЂР°С„РёС‡РµСЃРєРёС… РєРѕРѕСЂРґРёРЅР°С‚ С€Р»СЋР·РѕРІС‹С… СЃС‚Р°РЅС†РёР№ (РЁРЎ) РІ РЅР°С‡Р°Р»СЊРЅС‹Р№ РјРѕРјРµРЅС‚ РІСЂРµРјРµРЅРё [РіСЂР°Рґ]
     gatewaysCoordinatesGeoArray = jsondecode(fileread('gatewaysTest.json'));
     
-    satellitesCount = constellation.totalSatCount;          % Число КА
-    gatewaysCount = length(gatewaysCoordinatesGeoArray);    % Число ШС
+    satellitesCount = constellation.totalSatCount;          % Р§РёСЃР»Рѕ РљРђ
+    gatewaysCount = length(gatewaysCoordinatesGeoArray);    % Р§РёСЃР»Рѕ РЁРЎ
     
-    % Получение инерциальных координат ШС на текущую эпоху  [м]
+    % РџРѕР»СѓС‡РµРЅРёРµ РёРЅРµСЂС†РёР°Р»СЊРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚ РЁРЎ РЅР° С‚РµРєСѓС‰СѓСЋ СЌРїРѕС…Сѓ  [Рј]
     for gatewayIdx = 1: gatewaysCount
         gatewaysCoordinatesIcs(gatewayIdx, 1:3) = transitionGeoToIcs([gatewaysCoordinatesGeoArray(gatewayIdx).lat, ...
                                                                       gatewaysCoordinatesGeoArray(gatewayIdx).lon],...
                                                                       epochArray(epochIdx));
     end
         
-    % Получение инерциальных координат КА на момент epochIdx [м]
+    % РџРѕР»СѓС‡РµРЅРёРµ РёРЅРµСЂС†РёР°Р»СЊРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚ РљРђ РЅР° РјРѕРјРµРЅС‚ epochIdx [Рј]
     satellitesCoordinatesIcsArray = constellation.state.eci(:, :, epochIdx);
     
-    % Получение географических координат КА на момент epochIdx [м]
+    % РџРѕР»СѓС‡РµРЅРёРµ РіРµРѕРіСЂР°С„РёС‡РµСЃРєРёС… РєРѕРѕСЂРґРёРЅР°С‚ РљРђ РЅР° РјРѕРјРµРЅС‚ epochIdx [Рј]
     for satellitesIdx = 1:satellitesCount
-        satellitesCoordinatesGeoArray(satellitesIdx, 1:2) = transitionIcsToGeo(satellitesCoordinatesIcsArray(satellitesIdx,:)); % Географические координаты КА 
+        satellitesCoordinatesGeoArray(satellitesIdx, 1:2) = transitionIcsToGeo(satellitesCoordinatesIcsArray(satellitesIdx,:)); % Р“РµРѕРіСЂР°С„РёС‡РµСЃРєРёРµ РєРѕРѕСЂРґРёРЅР°С‚С‹ РљРђ 
     end
     
-    maxDistanceGroupList = zeros(2,1); % Инициализация списка максимальной дистанции видимости для группировок
+    maxDistanceGroupList = zeros(2,1); % РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ СЃРїРёСЃРєР° РјР°РєСЃРёРјР°Р»СЊРЅРѕР№ РґРёСЃС‚Р°РЅС†РёРё РІРёРґРёРјРѕСЃС‚Рё РґР»СЏ РіСЂСѓРїРїРёСЂРѕРІРѕРє
     
-    % Нахождение максимальной дистанции между КА и ШС в зоне видимости [м]
+    % РќР°С…РѕР¶РґРµРЅРёРµ РјР°РєСЃРёРјР°Р»СЊРЅРѕР№ РґРёСЃС‚Р°РЅС†РёРё РјРµР¶РґСѓ РљРђ Рё РЁРЎ РІ Р·РѕРЅРµ РІРёРґРёРјРѕСЃС‚Рё [Рј]
     maxDistanceGroupList(1) = calcMaxDistance(earthRadius, constellation.groups{1}.altitude*1000, elevationMinAngle);
     maxDistanceGroupList(2) = calcMaxDistance(earthRadius, constellation.groups{2}.altitude*1000, elevationMinAngle);
-    firstGroupCount  = constellation.groups{1}.satsPerPlane * constellation.groups{1}.planeCount; % Число КА в первой группе
-    secondGroupCount = constellation.groups{2}.satsPerPlane * constellation.groups{2}.planeCount; % Число КА во второй группе
+    firstGroupCount  = constellation.groups{1}.satsPerPlane * constellation.groups{1}.planeCount; % Р§РёСЃР»Рѕ РљРђ РІ РїРµСЂРІРѕР№ РіСЂСѓРїРїРµ
+    secondGroupCount = constellation.groups{2}.satsPerPlane * constellation.groups{2}.planeCount; % Р§РёСЃР»Рѕ РљРђ РІРѕ РІС‚РѕСЂРѕР№ РіСЂСѓРїРїРµ
     
-    pairSatGatArray     = []; % Инициализацияя массива номеров пар КА и ШС 
-    distancesSatGatList = []; % Инициализацияя дистанций между КА и ШС
-    distanceSatGatPoint = 0;  % Инициализацияя буферной переменной дистанции между текущими КА и ШС  
-    maxDistancePoint    = 0;  % Инициализацияя буферной переменной максимальной дистанции между текущими КА и ШС  
+    pairSatGatArray     = []; % РРЅРёС†РёР°Р»РёР·Р°С†РёСЏСЏ РјР°СЃСЃРёРІР° РЅРѕРјРµСЂРѕРІ РїР°СЂ РљРђ Рё РЁРЎ 
+    distancesSatGatList = []; % РРЅРёС†РёР°Р»РёР·Р°С†РёСЏСЏ РґРёСЃС‚Р°РЅС†РёР№ РјРµР¶РґСѓ РљРђ Рё РЁРЎ
+    distanceSatGatPoint = 0;  % РРЅРёС†РёР°Р»РёР·Р°С†РёСЏСЏ Р±СѓС„РµСЂРЅРѕР№ РїРµСЂРµРјРµРЅРЅРѕР№ РґРёСЃС‚Р°РЅС†РёРё РјРµР¶РґСѓ С‚РµРєСѓС‰РёРјРё РљРђ Рё РЁРЎ  
+    maxDistancePoint    = 0;  % РРЅРёС†РёР°Р»РёР·Р°С†РёСЏСЏ Р±СѓС„РµСЂРЅРѕР№ РїРµСЂРµРјРµРЅРЅРѕР№ РјР°РєСЃРёРјР°Р»СЊРЅРѕР№ РґРёСЃС‚Р°РЅС†РёРё РјРµР¶РґСѓ С‚РµРєСѓС‰РёРјРё РљРђ Рё РЁРЎ  
     
-    % Нахождение дистанции между КА и ШС [м]
+    % РќР°С…РѕР¶РґРµРЅРёРµ РґРёСЃС‚Р°РЅС†РёРё РјРµР¶РґСѓ РљРђ Рё РЁРЎ [Рј]
     for satellitesIdx = 1: satellitesCount
         for gatewayIdx = 1:  gatewaysCount           
             distanceSatGatPoint = sqrt((satellitesCoordinatesIcsArray(satellitesIdx, 1) - gatewaysCoordinatesIcs(gatewayIdx, 1)) ^ 2 ...
                                      + (satellitesCoordinatesIcsArray(satellitesIdx, 2) - gatewaysCoordinatesIcs(gatewayIdx, 2)) ^ 2 ...
                                      + (satellitesCoordinatesIcsArray(satellitesIdx, 3) - gatewaysCoordinatesIcs(gatewayIdx, 3)) ^ 2 );
                                    
-            if (satellitesIdx <=  firstGroupCount)    % Выбор максимальной дистанции от группировки
+            if (satellitesIdx <=  firstGroupCount)    % Р’С‹Р±РѕСЂ РјР°РєСЃРёРјР°Р»СЊРЅРѕР№ РґРёСЃС‚Р°РЅС†РёРё РѕС‚ РіСЂСѓРїРїРёСЂРѕРІРєРё
                 maxDistancePoint =  maxDistanceGroupList(1);
             else
                 maxDistancePoint =  maxDistanceGroupList(2);
             end
         
-            if (distanceSatGatPoint <= maxDistancePoint) % Условие видимости
+            if (distanceSatGatPoint <= maxDistancePoint) % РЈСЃР»РѕРІРёРµ РІРёРґРёРјРѕСЃС‚Рё
                 pairSatGatArray     = [pairSatGatArray; satellitesIdx, gatewayIdx];
                 distancesSatGatList = [distancesSatGatList; distanceSatGatPoint];
             end           
-        end % Окончание цикла по всем спутникам
-    end % Окончание цикла по всем ШС
+        end % РћРєРѕРЅС‡Р°РЅРёРµ С†РёРєР»Р° РїРѕ РІСЃРµРј СЃРїСѓС‚РЅРёРєР°Рј
+    end % РћРєРѕРЅС‡Р°РЅРёРµ С†РёРєР»Р° РїРѕ РІСЃРµРј РЁРЎ
     
-    pairSatGatCount         = length(pairSatGatArray);   % Число пар КА и ШС
-    antennaOrientationArray = zeros(pairSatGatCount,2);  % Инициализацияя массива ориентации антены для пар КА и ШС (угол места и азимут антены)
-    auxiliaryVector         = zeros(1,3);                % Инициализацияя буферной переменной разности векторов
+    pairSatGatCount         = length(pairSatGatArray);   % Р§РёСЃР»Рѕ РїР°СЂ РљРђ Рё РЁРЎ
+    antennaOrientationArray = zeros(pairSatGatCount,2);  % РРЅРёС†РёР°Р»РёР·Р°С†РёСЏСЏ РјР°СЃСЃРёРІР° РѕСЂРёРµРЅС‚Р°С†РёРё Р°РЅС‚РµРЅС‹ РґР»СЏ РїР°СЂ РљРђ Рё РЁРЎ (СѓРіРѕР» РјРµСЃС‚Р° Рё Р°Р·РёРјСѓС‚ Р°РЅС‚РµРЅС‹)
+    auxiliaryVector         = zeros(1,3);                % РРЅРёС†РёР°Р»РёР·Р°С†РёСЏСЏ Р±СѓС„РµСЂРЅРѕР№ РїРµСЂРµРјРµРЅРЅРѕР№ СЂР°Р·РЅРѕСЃС‚Рё РІРµРєС‚РѕСЂРѕРІ
      
-    % Нахождение ориентации антены для пар КА и ШС
+    % РќР°С…РѕР¶РґРµРЅРёРµ РѕСЂРёРµРЅС‚Р°С†РёРё Р°РЅС‚РµРЅС‹ РґР»СЏ РїР°СЂ РљРђ Рё РЁРЎ
     for pairSatGatIdx = 1:pairSatGatCount
         auxiliaryVector = gatewaysCoordinatesIcs   (pairSatGatArray(pairSatGatIdx,2),:) ...
-                        - satellitesCoordinatesIcsArray (pairSatGatArray(pairSatGatIdx,1),:); % Вспомогательный вектор
-         % Вычислене угла места [град]
+                        - satellitesCoordinatesIcsArray (pairSatGatArray(pairSatGatIdx,1),:); % Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Р№ РІРµРєС‚РѕСЂ
+         % Р’С‹С‡РёСЃР»РµРЅРµ СѓРіР»Р° РјРµСЃС‚Р° [РіСЂР°Рґ]
          antennaOrientationArray(pairSatGatIdx, 2) =  acosd ( satellitesCoordinatesIcsArray(pairSatGatArray(pairSatGatIdx,1),:) * auxiliaryVector' / ...
                                                             ( norm(auxiliaryVector) * norm(satellitesCoordinatesIcsArray(pairSatGatArray(pairSatGatIdx,1),:)))) ...
                                                              - 90;
-         % Определение азимута антены [град]   
+         % РћРїСЂРµРґРµР»РµРЅРёРµ Р°Р·РёРјСѓС‚Р° Р°РЅС‚РµРЅС‹ [РіСЂР°Рґ]   
          antennaOrientationArray(pairSatGatIdx, 1) = 180 + atand(tand ( gatewaysCoordinatesGeoArray(pairSatGatArray(pairSatGatIdx,2)).lon ...
                                                                       - satellitesCoordinatesGeoArray(pairSatGatArray(pairSatGatIdx,1))  ...
                                                                       / sind(gatewaysCoordinatesGeoArray(pairSatGatArray(pairSatGatIdx,2)).lat)));                                                
-    end % Окончание цикла по парам КА и ШС
+    end % РћРєРѕРЅС‡Р°РЅРёРµ С†РёРєР»Р° РїРѕ РїР°СЂР°Рј РљРђ Рё РЁРЎ
     
-    % Определение Доплеровского смещения ( Абсолютной величины. 
-    % Для определения знака требуется знать производную угла места, которую
-    % данная функция не вычисляет)
+    % РћРїСЂРµРґРµР»РµРЅРёРµ Р”РѕРїР»РµСЂРѕРІСЃРєРѕРіРѕ СЃРјРµС‰РµРЅРёСЏ ( РђР±СЃРѕР»СЋС‚РЅРѕР№ РІРµР»РёС‡РёРЅС‹. 
+    % Р”Р»СЏ РѕРїСЂРµРґРµР»РµРЅРёСЏ Р·РЅР°РєР° С‚СЂРµР±СѓРµС‚СЃСЏ Р·РЅР°С‚СЊ РїСЂРѕРёР·РІРѕРґРЅСѓСЋ СѓРіР»Р° РјРµСЃС‚Р°, РєРѕС‚РѕСЂСѓСЋ
+    % РґР°РЅРЅР°СЏ С„СѓРЅРєС†РёСЏ РЅРµ РІС‹С‡РёСЃР»СЏРµС‚)
     
-    satelliteSpeedPoint = 0;                        % Инициализацияя переменной скорости текущего КА 
-    orbitRadiusPoint    = 0;                        % Инициализация переменной радиуса орбиты для текущего КА 
-    orbitHeghtPoint     = 0;                        % Инициализация переменной радиуса орбиты для текущего КА
-    frequencyOffsetList = zeros(pairSatGatCount,1); % Инициализацияя массива сдвига частоты
-    satelliteViewAngle  = 0;                        % Угол обзора текущего КА   
+    satelliteSpeedPoint = 0;                        % РРЅРёС†РёР°Р»РёР·Р°С†РёСЏСЏ РїРµСЂРµРјРµРЅРЅРѕР№ СЃРєРѕСЂРѕСЃС‚Рё С‚РµРєСѓС‰РµРіРѕ РљРђ 
+    orbitRadiusPoint    = 0;                        % РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїРµСЂРµРјРµРЅРЅРѕР№ СЂР°РґРёСѓСЃР° РѕСЂР±РёС‚С‹ РґР»СЏ С‚РµРєСѓС‰РµРіРѕ РљРђ 
+    orbitHeghtPoint     = 0;                        % РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїРµСЂРµРјРµРЅРЅРѕР№ СЂР°РґРёСѓСЃР° РѕСЂР±РёС‚С‹ РґР»СЏ С‚РµРєСѓС‰РµРіРѕ РљРђ
+    frequencyOffsetList = zeros(pairSatGatCount,1); % РРЅРёС†РёР°Р»РёР·Р°С†РёСЏСЏ РјР°СЃСЃРёРІР° СЃРґРІРёРіР° С‡Р°СЃС‚РѕС‚С‹
+    satelliteViewAngle  = 0;                        % РЈРіРѕР» РѕР±Р·РѕСЂР° С‚РµРєСѓС‰РµРіРѕ РљРђ   
     
     for pairSatGatIdx = 1:pairSatGatCount
         
-      if (pairSatGatArray(pairSatGatIdx,1) <=  firstGroupCount)    % Подбор высоты и радиуса орбиты [м]
+      if (pairSatGatArray(pairSatGatIdx,1) <=  firstGroupCount)    % РџРѕРґР±РѕСЂ РІС‹СЃРѕС‚С‹ Рё СЂР°РґРёСѓСЃР° РѕСЂР±РёС‚С‹ [Рј]
           orbitRadiusPoint = earthRadius + constellation.groups{1}.altitude * 1000;
           orbitHeghtPoint  = constellation.groups{1}.altitude * 1000;
       else
@@ -102,15 +102,14 @@ function visiblesArray = findGatewayVisible(constellation, epochArray, epochIdx)
           orbitHeghtPoint  = constellation.groups{2}.altitude*1000;
       end 
       
-      satelliteSpeedPoint = sqrt(constellation.earthGM / orbitHeghtPoint); % Скорость спутника [м/с]
-      satelliteViewAngle = asind( (earthRadius * sind (90 + antennaOrientationArray(pairSatGatIdx, 2)))/( earthRadius + orbitHeghtPoint) ); % Угол обзора текущего КА
-      % Смещение частоты
+      satelliteSpeedPoint = sqrt(constellation.earthGM / orbitHeghtPoint); % РЎРєРѕСЂРѕСЃС‚СЊ СЃРїСѓС‚РЅРёРєР° [Рј/СЃ]
+      satelliteViewAngle = asind( (earthRadius * sind (90 + antennaOrientationArray(pairSatGatIdx, 2)))/( earthRadius + orbitHeghtPoint) ); % РЈРіРѕР» РѕР±Р·РѕСЂР° С‚РµРєСѓС‰РµРіРѕ РљРђ
+      % РЎРјРµС‰РµРЅРёРµ С‡Р°СЃС‚РѕС‚С‹
       frequencyOffsetList(pairSatGatIdx,1) = 2 * carrierFrequency * satelliteSpeedPoint * cosd(90 - satelliteViewAngle) / pointSpeedLight;
-    end % Окончание цикла по парам КА и ШС
+    end % РћРєРѕРЅС‡Р°РЅРёРµ С†РёРєР»Р° РїРѕ РїР°СЂР°Рј РљРђ Рё РЁРЎ
 
-   % Результируюшая структура данных 
+   % Р РµР·СѓР»СЊС‚РёСЂСѓСЋС€Р°СЏ СЃС‚СЂСѓРєС‚СѓСЂР° РґР°РЅРЅС‹С… 
     visiblesArray = struct('satelliteIdx',    pairSatGatArray(:,1),          'gatewayIdx',     pairSatGatArray(:,2), ...
                            'elevationAngle',  antennaOrientationArray(:, 2), 'antennaAzimut',  antennaOrientationArray(:, 1), ...
                            'distancesSatGat', distancesSatGatList(:,1),      'frequencyOffset', frequencyOffsetList(:,1)); 
-  
 end
