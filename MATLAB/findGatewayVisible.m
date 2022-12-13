@@ -1,6 +1,6 @@
 function visiblesArray = findGatewayVisible(constellation, epochArray, epochIdx)
 % Функция определяет видимые КА для шлюзовых станций (ШС)  в заданный момент
-% времени. Функция возвращает массив данных с указанием номера КА, номера
+% времени. Функция возвращает структуру данных с указанием номера КА, номера
 % ШС, угол места и азимут антены, а так же доплеровский сдвиг частоты
 % радиосигнала.
 
@@ -88,7 +88,7 @@ function visiblesArray = findGatewayVisible(constellation, epochArray, epochIdx)
     
     satelliteSpeedPoint = 0;                        % Инициализацияя переменной скорости текущего КА 
     orbitRadiusPoint    = 0;                        % Инициализация переменной радиуса орбиты для текущего КА 
-    orbitHeghtPoint     = 0;                        % Инициализация переменной радиуса орбиты для текущего КА
+    orbitHeghtPoint     = 0;                        % Инициализация переменной высоты орбиты для текущего КА
     frequencyOffsetList = zeros(pairSatGatCount,1); % Инициализацияя массива сдвига частоты
     satelliteViewAngle  = 0;                        % Угол обзора текущего КА   
     
