@@ -90,10 +90,10 @@ classdef ConstellationR < handle
         function propagateJ2(this, epochsArray) % CodeReview (1.1.6)
             this.state.eci = zeros(this.totalSatCount, 3, length(epochsArray));
 
-            sma         = this.state.elements(:, 1);    % высота орбиты [м] CodeReview (3.4)
-            inclination = this.state.elements(:, 5);    % наклонение орбитальной плоскости [] CodeReview (3.4)         
-            raan0       = this.state.elements(:, 4);    %  [] CodeReview (3.4)
-            aol0        = this.state.elements(:, 6);    %  [] CodeReview (3.4)
+            sma         = this.state.elements(:, 1);     % высота орбиты [м] CodeReview (3.4)
+            inclination = this.state.elements(:, 5);     % наклонение орбитальной плоскости [] CodeReview (3.4)         
+            raan0       = this.state.elements(:, 4);     %  [] CodeReview (3.4)
+            aol0        = this.state.elements(:, 6);     %  [] CodeReview (3.4)
 
             raanPrecessionRate = -1.5 * (this.earthJ2 * this.earthGM^(1/2) * this.earthRadius^2) ./ (sma.^(7/2)) .* cos(inclination);
             draconicOmega      = sqrt(this.earthGM ./ sma.^3) .* (1 - 1.5 * this.earthJ2 .* (this.earthRadius ./ sma).^2) .* (1 - 4 .* cos(inclination).^2);
