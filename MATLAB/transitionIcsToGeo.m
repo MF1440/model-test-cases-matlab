@@ -1,17 +1,17 @@
 function coordinatesGeo = transitionIcsToGeo(coordinatesICS)
-% Функция перехода из ИСК в географическую систему
-% координат 
-% coordinatesICS = [X,Y,Z] - координаты неподвижной ИСК 
-% coordinatesGeo = [lat,lon] - Географические координаты,
+% Р¤СѓРЅРєС†РёСЏ РїРµСЂРµС…РѕРґР° РёР· РРЎРљ РІ РіРµРѕРіСЂР°С„РёС‡РµСЃРєСѓСЋ СЃРёСЃС‚РµРјСѓ
+% РєРѕРѕСЂРґРёРЅР°С‚ 
+% coordinatesICS = [X,Y,Z] - РєРѕРѕСЂРґРёРЅР°С‚С‹ РЅРµРїРѕРґРІРёР¶РЅРѕР№ РРЎРљ 
+% coordinatesGeo = [lat,lon] - Р“РµРѕРіСЂР°С„РёС‡РµСЃРєРёРµ РєРѕРѕСЂРґРёРЅР°С‚С‹,
 
-    % Константы 
-    Radian = 57.2957795; % 1 радиан в градусах
+    % РљРѕРЅСЃС‚Р°РЅС‚С‹ 
+    Radian = 57.2957795; % 1 СЂР°РґРёР°РЅ РІ РіСЂР°РґСѓСЃР°С…
     
-    % Получение географических координат 
+    % РџРѕР»СѓС‡РµРЅРёРµ РіРµРѕРіСЂР°С„РёС‡РµСЃРєРёС… РєРѕРѕСЂРґРёРЅР°С‚ 
     coordinatesGeo(1,1) = atand ( coordinatesICS(3) / sqrt(coordinatesICS(1)^2 + coordinatesICS(2)^2));
     coordinatesGeo(1,2) = acosd ( coordinatesICS(1) / sqrt(coordinatesICS(1)^2 + coordinatesICS(2)^2));
 
-    % Учет квадранта 
+    % РЈС‡РµС‚ РєРІР°РґСЂР°РЅС‚Р° 
     if (coordinatesICS(2) <= 0) 
         coordinatesGeo(1,2) = -coordinatesGeo(1,2) + 180;
     end
