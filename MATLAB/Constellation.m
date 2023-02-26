@@ -74,11 +74,11 @@ classdef Constellation < handle
             elements = zeros(group.totalSatCount, 6);
             idx = 1;
             raanIdx = 0;
+            sma = this.earthRadius + group.altitude * 1000;
+                        
             for raan = raanList
-                for idxSat = 0:group.satsPerPlane-1 
-                    sma = this.earthRadius + group.altitude * 1000;
+                for idxSat = 0:group.satsPerPlane-1                    
                     aol = 2 * pi / group.satsPerPlane * idxSat + 2 * pi / group.totalSatCount * group.phaseShift * raanIdx;
-
                     elements(idx, :) = [sma, 0, 0, raan, group.inclination, aol];
                     idx = idx + 1;
                 end                    % Конец цикла по КА в орбитальной плоскости группы 
@@ -96,15 +96,17 @@ classdef Constellation < handle
 
             raanPrecessionRate = -1.5 * (this.earthJ2 * this.earthGM^(1/2) * this.earthRadius^2) ./ (sma.^(7/2)) .* cos(inclination);
             draconicOmega      = sqrt(this.earthGM ./ sma.^3) .* (1 - 1.5 * this.earthJ2 .* (this.earthRadius ./ sma).^2) .* (1 - 4 .* cos(inclination).^2);
-
+            
+            aol = repmat(aol0, 1, length(epochList)) + repmat(epochList, length(draconicOmega), 1) .* repmat(draconicOmega, 1, length(epochList));
+            raanOmega = repmat(raan0, 1, length(epochList)) + repmat(epochList, length(raanPrecessionRate), 1) .* repmat(raanPrecessionRate, 1, length(epochList));
+            
             for epochIdx = 1:length(epochList)
-                aol = aol0 + epochList(epochIdx) * draconicOmega;
-                raanOmega = raan0 + epochList(epochIdx) * raanPrecessionRate;
-
-                this.state.eci(:, :, epochIdx)  = [sma .* (cos(aol) .* cos(raanOmega) - sin(aol) .* cos(inclination) .* sin(raanOmega)), ...
-                                                   sma .* (cos(aol) .* sin(raanOmega) + sin(aol) .* cos(inclination) .* cos(raanOmega)), ...
-                                                   sma .* (sin(aol) .* sin(inclination))];
-            end    % Конец цикла по эпохам
+                
+                this.state.eci(:, :, epochIdx)  = [sma .* (cos(aol(:,epochIdx)) .* cos(raanOmega(:,epochIdx)) - sin(aol(:,epochIdx)) .* cos(inclination) .* sin(raanOmega(:,epochIdx))), ...
+                                                   sma .* (cos(aol(:,epochIdx)) .* sin(raanOmega(:,epochIdx)) + sin(aol(:,epochIdx)) .* cos(inclination) .* cos(raanOmega(:,epochIdx))), ...
+                                                   sma .* (sin(aol(:,epochIdx)) .* sin(inclination))];
+            end    % Конец цикла по эпохам 
+            
         end        % Конец функции propagateJ2
     end            % Конец секции с описанием методов класса
 end
