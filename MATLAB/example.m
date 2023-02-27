@@ -17,6 +17,7 @@ constellation.propagateJ2(epochList);
 % Координаты случайного КА (в инерциальных осях) после этого можно прочитать из constellation.state.eci
 satIdx = ceil(constellation.totalSatCount * rand());
 epochIdx = ceil(length(epochList) * rand());
+
 disp(['Положение КА-' num2str(satIdx) ' на эпоху ' num2str(epochList(epochIdx)) ':']);
 disp(constellation.state.eci(satIdx, :, epochIdx));
 
