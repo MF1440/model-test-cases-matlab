@@ -21,7 +21,7 @@ classdef Constellation < handle
         end
 
         function loadFromConfigFile(this, code)
-            fileName = 'constellationsTest.json';
+            fileName = '../constellationsTest.json';
             str = fileread(fileName);
             data = jsondecode(str);
             dataThis = [];
