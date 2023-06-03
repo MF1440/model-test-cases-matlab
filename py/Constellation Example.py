@@ -1,20 +1,34 @@
-from constellation import *
+import os
+import pathlib
+
 from random import randint
 
-# создание объекта типа Constellation, инициализация параметрами группировки Stalink из конфига
-constellation = Constellation('Starlink')
+from constellation import Constellation
 
-# вычисление элементов орбиты для всех КА в начальный момент
-constellation.getInitialState()
+# Создание объекта типа Constellation
+constellation = Constellation()
 
-# определение точек на оси времени, в которые будут проихзводиться расчёты
-epochs = list(range(1002))
+# Инициализация параметрами группировки Starlink из конфига
+try:
+	parent_dir_path = pathlib.Path(__file__).parent.parent.resolve()
+	example_file_path = os.path.join(parent_dir_path, "constellationsTest.json")
+	constellation.load_from_config(example_file_path, "Starlink")
+except Exception as ex:
+	exit(f"Ошибка загрузки конфига: {ex}")
 
-# расчёт положений всех КА в заданные моменты времени
-constellation.propagateJ2(epochs)
+# Вычисление элементов орбиты для всех КА в начальный момент времени
+constellation.initialize_state()
 
-# Координаты случайного КА (в инерциальных осях) после этого можно прочитать из constellation.stateEci
-satIdx = randint(0, constellation.totalSatCount - 1)
-epochIdx = randint(0, len(epochs) - 1)
-print("Положение КА-" + str(satIdx) + " на эпоху " + str(epochs[epochIdx]) + ":")
-print(constellation.stateEci[satIdx, :, epochIdx])
+# Определение точек на оси времени, в которые будут производиться расчёты
+points_number = 1002
+epoch_list = list(range(points_number))
+
+# Расчёт положений всех КА в заданные моменты времени
+constellation.propagate_j2(epoch_list)
+
+# Координаты случайного КА
+sat_idx = randint(0, constellation.total_sat_count - 1)
+epoch_idx = randint(0, points_number - 1)
+
+print(f"Положение КА-{sat_idx} на эпоху {epoch_list[epoch_idx]}:")
+print(constellation.state_eci[sat_idx, :, epoch_idx])

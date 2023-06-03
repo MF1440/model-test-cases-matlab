@@ -1,118 +1,125 @@
-import numpy as np
 import json
+import numpy as np
+
 from typing import NamedTuple
 
-
-class Parameters(object):
-    pass
-
-
-Const = Parameters()
-Const.earthRadius = 6378135      # Экваториальный радиус Земли [m]
-Const.earthGM = 3.986004415e+14  # Гравитационный параметр Земли [m3/s2]
-Const.earthJ2 = 1.082626e-3      # Вторая зональная гармоника геопотенциала
-
-group = Parameters()
+from consts import *
 
 
 class Walker(NamedTuple):
-    inclination: float           # наклонение орбиты
-    satsPerPlane: int            # число КА в каждой орбитальной плоскости группы
-    planeCount: int              # число орбитальных плоскостей в группе
-    f: int                       # фазовый сдвиг по аргументу широты между КА в соседних плоскостях
-    altitude: float              # высота орбиты
-    maxRaan: float               # максимум прямого восхождения восходящего узла (при распределении орбитальных плоскостей)
-    startRaan: float             # прямое восхождение восходящего узла для первой плоскости
+    inclination:    float   # Наклонение орбиты
+    sats_per_plane: int     # Число КА в каждой орбитальной плоскости группы
+    plane_count:    int     # Число орбитальных плоскостей в группе
+    phase_shift:    int     # Фазовый сдвиг по аргументу широты между КА в соседних плоскостях
+    altitude:       float   # Высота орбиты
+    max_raan:       float   # Максимум прямого восхождения восходящего узла (при распределении орбитальных плоскостей)
+    start_raan:     float   # Прямое восхождение восходящего узла для первой плоскости
 
 
 class WalkerGroup(Walker):
 
-    def getTotalSatCount(self):
-        return self.satsPerPlane * self.planeCount
+    def get_total_sat_count(self):
+        return self.sats_per_plane * self.plane_count
 
-    def getInitialElements(self):
-        startRaan   = np.deg2rad(self.startRaan)
-        maxRaan     = np.deg2rad(self.maxRaan)
+    def calculate_initial_elements(self):
+        start_raan = np.deg2rad(self.start_raan)
+        max_raan = np.deg2rad(self.max_raan)
         inclination = np.deg2rad(self.inclination)
-        altitude    = self.altitude * 1000
-        satCount    = self.getTotalSatCount()
+        altitude = self.altitude * 1000
+        sat_count = self.get_total_sat_count()
 
-        raans = np.linspace(startRaan, startRaan + maxRaan, self.planeCount + 1)
+        sma = EARTH_RADIUS + altitude
+        raans = np.linspace(start_raan, start_raan + max_raan, self.plane_count + 1)
         raans = raans[:-1] % (2 * np.pi)
 
-        elements = np.zeros((satCount, 6))
-        idx = 0
+        elements = np.zeros((sat_count, 6))
+        element_idx = 0
 
-        for raanIdx, raan in enumerate(raans):
-            for satIdx in range(self.satsPerPlane):
-                sma = Const.earthRadius + altitude
-                aol = 2 * np.pi * (satIdx / self.satsPerPlane + self.f * raanIdx / satCount)
+        for raan_idx, raan in enumerate(raans):
+            for sat_idx in range(self.sats_per_plane):
+                aol = 2 * np.pi * (sat_idx / self.sats_per_plane + self.phase_shift * raan_idx / sat_count)
 
-                elements[idx, :] = [sma, 0, 0, raan, inclination, aol]
-                idx += 1
+                elements[element_idx, :] = [sma, 0, 0, raan, inclination, aol]
+                element_idx += 1
 
         return elements
 
 
 class Constellation:
 
-    def __init__(self, nameCode):
-        self.totalSatCount = 0
-        self.groups   = []
+    def __init__(self):
+        self.total_sat_count = 0
+        self.groups = []
         self.elements = []
-        self.stateEci = []
-        self.loadFromConfig(nameCode)
+        self.state_eci = []
 
-    def loadFromConfig(self, nameCode):
-        f = open('ConstellationsTest.json')
-        jsonData = json.loads(f.read())
+    def load_from_config(self, file_path, name_code):
+        try:
+            with open(file_path) as fp:
+                json_data = json.load(fp)
+        except FileNotFoundError:
+            raise Exception("Файл не найден")
 
-        for entryIdx in range(len(jsonData)):
-            if (jsonData[entryIdx]['name']).lower() == nameCode.lower():
-                print("Загружена группировка " + nameCode)
-                constellationData = jsonData[entryIdx]
+        for constellation_data in json_data:
+            current_name = constellation_data.get("name")
+            if current_name is None:
+                continue
 
-                for groupIdx in range(len(constellationData['Walkers'])):
-                    self.groups.append(WalkerGroup(*constellationData['Walkers'][groupIdx]))
-                    self.totalSatCount += self.groups[groupIdx].getTotalSatCount()
+            if current_name.lower() == name_code.lower():
+                current_walkers = constellation_data.get("Walkers")
+                if not current_walkers:
+                    raise Exception(f"Данные о спутниках группировки {name_code} не найдены")
 
-                f.close()
+                try:
+                    for walker_data in current_walkers:
+                        walker_group = WalkerGroup(*walker_data)
+                        self.groups.append(walker_group)
+                        self.total_sat_count += walker_group.get_total_sat_count()
+                except TypeError:
+                    raise Exception(f"Формат данных о спутниках группировки {name_code} некорректен")
+
+                print(f"Загружена группировка {name_code}")
                 return
 
-        f.close()
-        raise Exception('Группировка не найдена в файле')
+        raise Exception("Группировка не найдена в файле")
 
-    def getInitialState(self):
-        self.elements = np.zeros((self.totalSatCount, 6))
+    def initialize_state(self):
+        if self.total_sat_count <= 0:
+            return
+
+        self.elements = np.zeros((self.total_sat_count, 6))
         shift = 0
 
-        for singleGroup in self.groups:
-            ending = shift + singleGroup.getTotalSatCount()
-            self.elements[shift:ending, :] = singleGroup.getInitialElements()
+        for single_group in self.groups:
+            ending = shift + single_group.get_total_sat_count()
+            self.elements[shift:ending, :] = single_group.calculate_initial_elements()
             shift = ending
 
-    def propagateJ2(self, epochs):
-        self.stateEci = np.zeros((self.totalSatCount, 3, len(epochs)))
+    def propagate_j2(self, epoch_list):
+        if len(self.elements) == 0:
+            return
+
+        self.state_eci = np.zeros((self.total_sat_count, 3, len(epoch_list)))
 
         inclination = self.elements[:, 4]
         sma = self.elements[:, 0]
         raan0 = self.elements[:, 3]
         aol0 = self.elements[:, 5]
 
-        raanPrecessionRate = -1.5 * (Const.earthJ2 * np.sqrt(Const.earthGM) * Const.earthRadius**2) \
-                           / (sma**(7/2)) * np.cos(inclination)
+        raan_precession_rate = -1.5 * (EARTH_J2 * np.sqrt(EARTH_GM) * EARTH_RADIUS ** 2) / (sma ** (7 / 2)) \
+            * np.cos(inclination)
 
-        draconicOmega      = np.sqrt(Const.earthGM / sma**3) \
-                           * (1 - 1.5 * Const.earthJ2 * (Const.earthRadius / sma)**2) \
-                           * (1 - 4 * np.cos(inclination)**2)
+        draconic_omega = np.sqrt(EARTH_GM / sma ** 3) * (1 - 1.5 * EARTH_J2 * (EARTH_RADIUS / sma) ** 2) \
+            * (1 - 4 * np.cos(inclination)**2)
 
-        for epoch in epochs:
-            aol = aol0 + epoch * draconicOmega
-            raanOmega = raan0 + epoch * raanPrecessionRate
+        for epoch in epoch_list:
+            aol = aol0 + epoch * draconic_omega
+            raan_omega = raan0 + epoch * raan_precession_rate
 
-            epochState = sma * [
-                (np.cos(aol) * np.cos(raanOmega) - np.sin(aol) * np.cos(inclination) * np.sin(raanOmega)),
-                (np.cos(aol) * np.sin(raanOmega) + np.sin(aol) * np.cos(inclination) * np.cos(raanOmega)),
-                (np.sin(aol) * np.sin(inclination))]
+            epoch_state = sma * [
+                (np.cos(aol) * np.cos(raan_omega) - np.sin(aol) * np.cos(inclination) * np.sin(raan_omega)),
+                (np.cos(aol) * np.sin(raan_omega) + np.sin(aol) * np.cos(inclination) * np.cos(raan_omega)),
+                (np.sin(aol) * np.sin(inclination))
+            ]
 
-            self.stateEci[:, :, epochs.index(epoch)] = np.array(epochState).T
+            self.state_eci[:, :, epoch_list.index(epoch)] = np.array(epoch_state).T
