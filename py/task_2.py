@@ -69,15 +69,12 @@ def get_sphere_points(angle_shift, radius):
 
 
 # Представление координат в новой системе координат с осью Z, направленной на KA
-def get_transformed_coords(points_coords, sat_coords, radius, altitude):
-    old_z = np.array([0, 0, radius + altitude])
+def get_transformed_coords(points_coords, sat_coords, radius):
+    axis_z = np.array([0, 0, 1.0])
+    normal_sat_coords = sat_coords / np.linalg.norm(sat_coords)
 
-    old_z = old_z / np.linalg.norm(old_z)
-    sat_coords = sat_coords / np.linalg.norm(sat_coords)
-
-    rotation_vector = np.cross(old_z, sat_coords)
-
-    theta = np.arccos(np.dot(old_z, sat_coords))
+    rotation_vector = np.cross(axis_z, normal_sat_coords)
+    theta = np.arccos(np.dot(axis_z, normal_sat_coords))
 
     rotation_matrix = np.array([
         [np.cos(theta) + rotation_vector[0]**2 * (1 - np.cos(theta)),
@@ -91,8 +88,13 @@ def get_transformed_coords(points_coords, sat_coords, radius, altitude):
          np.cos(theta) + rotation_vector[2]**2 * (1 - np.cos(theta))]
     ])
 
-    transformed_coords = [np.dot(rotation_matrix, np.array(coords)) for coords in points_coords]
-    return transformed_coords
+    transformed_points_coords = [[]] * len(points_coords)
+    for point_idx, coords in enumerate(points_coords):
+        transformed_coords = np.dot(rotation_matrix, np.array(coords))
+        transformed_coords = transformed_coords / np.linalg.norm(transformed_coords) * radius
+        transformed_points_coords[point_idx] = transformed_coords
+
+    return transformed_points_coords
 
 
 # Получение индексов точек в зоне покрытия в системе ECI
@@ -105,7 +107,7 @@ def get_coverage_percent(satellites, points_coords, alpha):
     covered_points = set()
     for sat in satellites:
         sat.update_horde_level(alpha, EARTH_RADIUS)
-        transformed_points_coords = get_transformed_coords(points_coords, sat.coords, EARTH_RADIUS, sat.altitude)
+        transformed_points_coords = get_transformed_coords(points_coords, sat.coords, EARTH_RADIUS)
 
         for point_idx in get_covered_points(transformed_points_coords, sat.horde_level):
             covered_points.add(point_idx)
@@ -134,7 +136,7 @@ def main():
 
     # Установка минимального и максимального углов обзора, точности определения покрытия
     min_alpha = 0
-    max_alpha = 90
+    max_alpha = 60
     accuracy = 3
 
     alpha_list = np.arange(min_alpha, max_alpha + accuracy, accuracy)
