@@ -6,6 +6,7 @@ Created on Fri Jun 30 22:15:57 2023
 """
 
 import numpy as np
+from pyquaternion import Quaternion
 
 # Класс для генерации сетки на сфере, полученной из спирали Фибоначчи.
 class Sphere():
@@ -16,6 +17,23 @@ class Sphere():
     def __init__(self, radius: float, pointCount: int):
         self.radius = radius
         self.pointCount = pointCount
+        
+    # Производит вращение векторов на угол, определяемый скоростью
+    # и промежутком времени.
+    # positionList -- список векторов;
+    # rotationalAxis -- ось вращения;
+    # angularVelocity -- уговая скорость, [рад/с];
+    # deltaTime -- промедуток времени, [с].
+    def rotatePosition(self, positionList: np.array, rotationalAxis: np.array,
+                       angularVelocity: float, deltaTime: float) -> np.array:
+        # Определение угла вращения.
+        deltaAngle = angularVelocity * deltaTime
+        # Инициализация кватерниона.
+        quaternion = Quaternion(axis = rotationalAxis, angle = deltaAngle)
+        # Врещение векторов по одному, т.к. не определен иной интерфейс в модуле
+        for ind, _ in enumerate(positionList):
+            positionList[ind] = quaternion.rotate(positionList[ind])
+        return positionList
         
     # Генерация сетки по заданным параметрам.
     # pointList -- выходной вектор, содержащий 3-хмерные координаты точек

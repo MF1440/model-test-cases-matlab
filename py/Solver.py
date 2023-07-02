@@ -30,7 +30,8 @@ class Solver():
     # файла и проведение моделирования.
     # constellationName -- имя группировки;
     # epochCount -- количество шагов по времени;
-    def initializeConstellation(self, constellationName: str, epochCount: int):
+    def initializeConstellation(self, constellationName: str, epochCount: int,
+                                currentEpochIdx: int):
         # создание объекта типа Constellation, инициализация параметрами
         # группировки Stalink из конфига
         self.constellation = Constellation(constellationName)
@@ -40,21 +41,26 @@ class Solver():
         epochList = list(range(epochCount))
         # расчёт положений всех КА в заданные моменты времени
         self.constellation.propagateJ2(epochList)
-        # Координаты всех КА (в инерциальных осях) в некоторую эпоху
-        epochIdx = randint(0, len(epochList) - 1)
         # Копирование положения всех КА в эпоху epochIdx в поле класса.
-        self.walkerPositionList = self.constellation.stateEciList[:, :, epochIdx]
+        self.walkerPositionList = self.constellation.stateEciList[:, :, currentEpochIdx]
 
     # Расчет точек на сфере, привязка их к спутникам, получение cellId для
     # каждой точки, визуализация результата и возвращение результата в виде np.array.
     # result -- выходной двумерный массив. По индексу точки получается вектор из двух
     # элементов. Первый элемент -- cellId точки, второй -- номер связанного КА.
-    def getResultForTestCase(self) -> np.array:
+    def getResultForTestCase(self, deltaTime: float) -> np.array:
         print("Начало генерации сетки")
         start = time.time()
         # Инициализация генератора точек и получение сетки.
         sphere = Sphere(radius = self.radius, pointCount = self.spherePointCount)
         spherePointList = sphere.generateSpherePointList()
+        # Ось врашения.
+        rotaionalAxis = np.array([0, 0, 1])
+        # Врашение сетки вместе с Землей.
+        spherePointList = sphere.rotatePosition(spherePointList,
+                                                rotaionalAxis,
+                                                Const.earthAngularVelocity,
+                                                deltaTime)
         print("Начало расчета привязки")
         # Инициализация обхекта типа CellConnector.
         connector = CellConnector(spherePointCount = self.spherePointCount,
@@ -82,8 +88,12 @@ if __name__ == "__main__":
     # Создание обхекта-решателя Solver с передачей параметров радиуса
     # генерируемой сферы и количества точек на сфере.
     solver = Solver(Const.earthRadius, spherePointCount)
-    # Запуск расчета.
-    solver.initializeConstellation(constellationName, epochCount = epochCount)
+    # Случайный выбор некоторой эпохи. Далее предполагается, что эпоха
+    # равносильна секунде.
+    epochIdx = randint(0, epochCount - 1)
+    # Запуск расчета положкний КА.
+    solver.initializeConstellation(constellationName, epochCount = epochCount,
+                                   currentEpochIdx = epochIdx)
     # Получение результата.
-    result = solver.getResultForTestCase()
+    result = solver.getResultForTestCase(epochIdx)
  
