@@ -4,3 +4,4 @@
 *.mat
 *.DS_Store
 *.gif
+**/__pycache__/
