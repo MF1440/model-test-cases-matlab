@@ -2,13 +2,8 @@ classdef Constellation < handle
 
     properties
         totalSatCount = 0;
-        groups = {};
+        groups = {};                 
         state;
-
-        % константы
-        earthRadius = 6378135;           % Экваториальный радиус Земли [m]
-        earthGM = 3.986004415e+14;       % Гравитационный параметр Земли [m3/s2]
-        earthJ2 = 1.082626e-3;           % Вторая зональная гармоника геопотенциала
     end
 
     methods
@@ -17,25 +12,33 @@ classdef Constellation < handle
             if isempty(varargin)
                 return
             end
-            this.loadFromConfigFile(varargin{1});
+            this.loadFromConfig(varargin{1});
         end
 
-        function loadFromConfigFile(this, code)
-            fileName = 'constellationsTest.json';
-            str = fileread(fileName);
-            data = jsondecode(str);
-            dataThis = [];
-
-            for i = 1:length(data)
-                if strcmpi(data(i).name, code)
-                    dataThis = data(i);
-                    break
+        function loadFromConfig(this, code)
+            if ischar(code)
+                fileName = ['..' filesep 'constellationsTest.json'];
+                str = fileread(fileName);
+                data = jsondecode(str);
+                dataThis = [];
+    
+                for i = 1:length(data)
+                    if strcmpi(data(i).name, code)
+                        dataThis = data(i);
+                        break
+                    end
                 end
-            end
-
-            if isempty(dataThis)
-                disp('Группировка не найдена в файле');
-                return
+                disp(class(code))
+                if isempty(dataThis)
+                    disp('Группировка не найдена в файле');
+                    return
+                end
+            
+            elseif isstruct(code)
+                dataThis = code;
+            
+            else 
+                disp('Входной параметр должен быть типа char или struct');
             end
 
             for i = 1:size(dataThis.Walkers, 1)
@@ -75,7 +78,7 @@ classdef Constellation < handle
             raanIDX = 0;
             for raan = raans
                 for i = 0:group.satsPerPlane-1
-                    sma = this.earthRadius + group.altitude * 1000;
+                    sma = AstroConstants.earthRadius + group.altitude * 1000;
                     aol = 2 * pi / group.satsPerPlane * i + 2 * pi / group.totalSatCount * group.f * raanIDX;
 
                     elements(idx, :) = [sma, 0, 0, raan, group.inclination, aol];
@@ -93,8 +96,8 @@ classdef Constellation < handle
             raan0       = this.state.elements(:, 4);
             aol0        = this.state.elements(:, 6);
 
-            raanPrecessionRate = -1.5 * (this.earthJ2 * this.earthGM^(1/2) * this.earthRadius^2) ./ (sma.^(7/2)) .* cos(inclination);
-            draconicOmega      = sqrt(this.earthGM ./ sma.^3) .* (1 - 1.5 * this.earthJ2 .* (this.earthRadius ./ sma).^2) .* (1 - 4 .* cos(inclination).^2);
+            raanPrecessionRate = -1.5 * (AstroConstants.earthJ2 * AstroConstants.earthGM^(1/2) * AstroConstants.earthRadius^2) ./ (sma.^(7/2)) .* cos(inclination);
+            draconicOmega      = sqrt(AstroConstants.earthGM ./ sma.^3) .* (1 - 1.5 * AstroConstants.earthJ2 .* (AstroConstants.earthRadius ./ sma).^2) .* (1 - 4 .* cos(inclination).^2);
 
             for epochIdx = 1:length(epochs)
                 aol = aol0 + epochs(epochIdx) * draconicOmega;
