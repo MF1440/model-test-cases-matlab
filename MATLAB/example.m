@@ -6,7 +6,7 @@ tic
 constellation = Constellation('Starlink');
 
 %вычисление элементов орбиты для всех КА в начальный момент
-constellation.getInitialState();
+constellation.getInitialState(0);
 
 % определение точек на оси времени, в которые будут проихзводиться расчёты
 epochs = (0: 1000: 6000);

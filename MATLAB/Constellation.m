@@ -56,20 +56,20 @@ classdef Constellation < handle
             end
         end
 
-        function getInitialState(this)
+        function getInitialState(this, timeMoment)
             this.state.elements = zeros(this.totalSatCount, 6);
             shift = 1;
 
             for group = this.groups
                 for i = 1:length(group{1})
                     ending = shift + group{1}(i).totalSatCount - 1;
-                    this.state.elements(shift:ending,:) = this.getInitialElements(group{1});
+                    this.state.elements(shift:ending,:) = this.getInitialElements(group{1}, timeMoment);
                     shift = ending + 1;
                 end
             end
         end
 
-        function elements = getInitialElements(this, group)
+        function elements = getInitialElements(this, group, timeMoment)
             raans = linspace(group.startRaan, group.startRaan + group.maxRaan, group.planeCount + 1);
             raans = mod(raans(1:end-1), 2 * pi);
 
@@ -79,7 +79,7 @@ classdef Constellation < handle
             for raan = raans
                 for i = 0:group.satsPerPlane-1
                     sma = AstroConstants.earthRadius + group.altitude * 1000;
-                    aol = 2 * pi / group.satsPerPlane * i + 2 * pi / group.totalSatCount * group.f * raanIDX;
+                    aol = 2 * pi / group.satsPerPlane * i + 2 * pi / group.totalSatCount * group.f * raanIDX + timeMoment;
 
                     elements(idx, :) = [sma, 0, 0, raan, group.inclination, aol];
                     idx = idx + 1;

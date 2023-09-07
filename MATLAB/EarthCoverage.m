@@ -1,13 +1,21 @@
 classdef EarthCoverage < handle
     % класс для проверки покрытия поверхности земли спутниками 
 
-    properties
-        meshDensityArray = [20, 50, 100, 200, 500, 1000];  % плотности сетки на которых будет считаться покрытие
-        alphaAngle;                                        % заданный угол обзора КА
-        gammaAngle;                                        % угол покрытия части поверхности одним спутником 
+    properties                  
         satCoords;
         mesh;
     end
+
+    properties (Constant)
+        meshDensityArray = [10, 50, 100, 350];                        % плотности сетки на которых будет считаться покрытие
+        phiEnd = pi;                                                  % Граница сетки по уголу phi
+        timeNodeCount = 25;                                           % Колличество точек на временной сетке 
+        meshCoeff = 2;                                                % Во сколько раз число узлов по phi больше чем по theta
+        alphaAngle = deg2rad(AstroConstants.alphaAngle);              % заданный угол обзора КА
+        gammaAngle = asin((AstroConstants.earthRadius + ...
+        AstroConstants.altitude * 1000) / AstroConstants.earthRadius...
+        * sin(EarthCoverage.alphaAngle)) - EarthCoverage.alphaAngle;  % половина угла покрытия части поверхности одним спутником
+    end 
 
     properties (Dependent)
         coverageMatrix
@@ -16,9 +24,6 @@ classdef EarthCoverage < handle
     methods
 
         function this = EarthCoverage()
-            this.alphaAngle = deg2rad(AstroConstants.alphaAngle);
-            this.gammaAngle = asin((AstroConstants.earthRadius + AstroConstants.altitude * 1000) / ...
-                AstroConstants.earthRadius * sin(this.alphaAngle)) - this.alphaAngle;  
         end
 
         function flag = checkEarthCoverage(this, satCountPerOrbit, orbitCount, phase, epoch)
@@ -30,25 +35,26 @@ classdef EarthCoverage < handle
             % 
             % Возвращает true в случае полного покрытия и false в ином случае  
 
-            this.getSatSphereCoords(satCountPerOrbit, orbitCount, phase, epoch);
-            for meshDensity=this.meshDensityArray 
-                this.mesh.phi = linspace(0, pi, 2*meshDensity);  % узлы сетки по сферической координате phi (меняется от 0 до pi)
-                this.mesh.theta = linspace(0, deg2rad(AstroConstants.inclination), meshDensity);  % узлы сетки по сферической координате theta (меняется от 0 до pi/3)
-                if min(this.coverageMatrix, [], "all") > 0  % проверяет найдено ли полное покрытие 
-                    disp(['На сетке ', num2str(2*meshDensity),'x', num2str(meshDensity)...
-                        ' найдена конфигурация с полным покрытием: '])
-                    disp(['орбит ', int2str(orbitCount), ' спутников ', ...
-                        int2str(satCountPerOrbit), ' фазовый сдвиг ', int2str(phase), ...
-                    ' спутников (всего ', int2str(satCountPerOrbit * orbitCount),')'])
-                    flag = true;
-                else  % если полного покрытия нет, то выходит из цикла без проверки на более мелких сетках
-                    flag = false;
+            timeMesh = linspace(0, 2 * pi / satCountPerOrbit / orbitCount * phase, EarthCoverage.timeNodeCount);  % изменение угла aol во времени
+            for meshDensity=this.meshDensityArray
+                for timeMoment = timeMesh(1:end-1)  
+                    this.getSatSphereCoords(satCountPerOrbit, orbitCount, phase, epoch, timeMoment);
+                    this.mesh.phi = linspace(0, EarthCoverage.phiEnd, EarthCoverage.meshCoeff * meshDensity);  % узлы сетки по сферической координате phi (меняется от 0 до pi)
+                    this.mesh.theta = linspace(0, deg2rad(AstroConstants.inclination), meshDensity);  % узлы сетки по сферической координате theta (меняется от 0 до pi/3)
+                    if min(this.coverageMatrix, [], "all") > 0  % проверяет найдено ли полное покрытие 
+                        flag = true;
+                    else  % если полного покрытия нет, то выходит из цикла без проверки на более мелких сетках
+                        flag = false;
+                        break
+                    end 
+                end  % конец цикла движения во времени
+                if ~flag 
                     break
-                end 
+                end
             end  % конец цикла по плотности сетки
         end
 
-        function getSatSphereCoords(this, satCountPerOrbit, orbitCount, phase, epoch)
+        function getSatSphereCoords(this, satCountPerOrbit, orbitCount, phase, epoch, timeMoment)
             % Получает координаты КА в сферической системе координат
 
             config.Walkers = [[AstroConstants.inclination, ...
@@ -59,7 +65,7 @@ classdef EarthCoverage < handle
                             AstroConstants.maxRaan, ...
                             AstroConstants.startRaan]];
             constellation = Constellation(config);
-            constellation.getInitialState();
+            constellation.getInitialState(timeMoment);
             constellation.propagateJ2([epoch]);
             satEciCoords = constellation.state.eci(:, :, [1]);
             [this.satCoords.phi, this.satCoords.theta, ~] = cart2sph(satEciCoords(:,1), ...
@@ -88,7 +94,7 @@ classdef EarthCoverage < handle
             % и вершиной в центре земли меньше угла gamma
 
             angleBetweenSatAndPoint = this.calcAngleBetweenSatAndPoint(phi, theta);
-            coverageDensity = sum((angleBetweenSatAndPoint <= this.gammaAngle));
+            coverageDensity = sum((angleBetweenSatAndPoint <= EarthCoverage.gammaAngle));
         end
 
         function angleBetweenSatAndPoint = calcAngleBetweenSatAndPoint(this, phi, theta)
