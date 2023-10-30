@@ -6,9 +6,10 @@ classdef Constellation < handle
         state;
 
         % константы
-        earthRadius = 6378135;           % Экваториальный радиус Земли [m]
-        earthGM = 3.986004415e+14;       % Гравитационный параметр Земли [m3/s2]
-        earthJ2 = 1.082626e-3;           % Вторая зональная гармоника геопотенциала
+        earthRadius = 6378135;           % экваториальный радиус Земли [m]
+        earthGM = 3.986004415e+14;       % гравитационный параметр Земли [m3/s2]
+        earthJ2 = 1.082626e-3;           % вторая зональная гармоника геопотенциала
+        earthAngVel = 2 * pi / 86164     % угловая скорость вращения Земли
     end
 
     methods
@@ -103,6 +104,21 @@ classdef Constellation < handle
                 this.state.eci(:, :, epochIdx)  = [sma .* (cos(aol) .* cos(raanOmega) - sin(aol) .* cos(inclination) .* sin(raanOmega)), ...
                                                    sma .* (cos(aol) .* sin(raanOmega) + sin(aol) .* cos(inclination) .* cos(raanOmega)), ...
                                                    sma .* (sin(aol) .* sin(inclination))];
+            end
+
+            this.eci2ecef(epochs);
+        end
+
+        function eci2ecef(this, epochs)
+            this.state.ecef = zeros(size(this.state.eci));
+
+            for epochIdx = 1:length(epochs)
+                phi = this.earthAngVel * epochs(epochIdx);
+                rotationMatrix = [cos(phi) sin(phi) 0
+                                 -sin(phi) cos(phi) 0
+                                  0 0 1];
+
+                this.state.ecef(:, :, epochIdx) = (rotationMatrix * this.state.eci(:, :, epochIdx)')';
             end
         end
     end
