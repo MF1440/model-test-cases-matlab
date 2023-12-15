@@ -1,3 +1,10 @@
+# 1. В сам код внес только одно изменение, имя файла с данными начинается с маленькой буквы,
+#    из-за этого код не работает под Linux.
+# 2. По оформлению кода замечания не высказываю, на мой взгляд все нормально, насколько он 
+#    удовлетворяет PEP8 не знаю, я давно не встречал чтобы его соблюдали. StyleGuide стараюсь
+#    соблюдать в коде на C/C++.
+# 3. Основное замечание по коду - то, что циклы можно убрать и заменить на векторные операции Numpy.
+
 import numpy as np
 import json
 from typing import NamedTuple
@@ -40,14 +47,17 @@ class WalkerGroup(Walker):
         raans = np.linspace(startRaan, startRaan + maxRaan, self.planeCount + 1)
         raans = raans[:-1] % (2 * np.pi)
 
+        # По второму измерению размерность 6, используются не все компоненты, часть  компонент заполнена постоянными значениями
         elements = np.zeros((satCount, 6))
         idx = 0
 
+        # Можно убрать циклы
         for raanIdx, raan in enumerate(raans):
             for satIdx in range(self.satsPerPlane):
                 sma = Const.earthRadius + altitude
                 aol = 2 * np.pi * (satIdx / self.satsPerPlane + self.f * raanIdx / satCount)
 
+                # Нули не используются
                 elements[idx, :] = [sma, 0, 0, raan, inclination, aol]
                 idx += 1
 
@@ -64,10 +74,14 @@ class Constellation:
         self.loadFromConfig(nameCode)
 
     def loadFromConfig(self, nameCode):
-        f = open('ConstellationsTest.json')
+        # В проекте файл называется с маленькой буквы
+        f = open('constellationsTest.json')
+        # Удобнее было бы все сделать через библиотеку Pandas
         jsonData = json.loads(f.read())
 
+        # Можно заменить на enumerate
         for entryIdx in range(len(jsonData)):
+            # nameCode.lower() - можно один раз заранее посчитать
             if (jsonData[entryIdx]['name']).lower() == nameCode.lower():
                 print("Загружена группировка " + nameCode)
                 constellationData = jsonData[entryIdx]
@@ -106,10 +120,16 @@ class Constellation:
                            * (1 - 1.5 * Const.earthJ2 * (Const.earthRadius / sma)**2) \
                            * (1 - 4 * np.cos(inclination)**2)
 
+        # Можно сделать без цикла
         for epoch in epochs:
             aol = aol0 + epoch * draconicOmega
             raanOmega = raan0 + epoch * raanPrecessionRate
 
+            # Это бросается в глаза больше всего.
+            # Тригонометрические функции от одних и тех же аргументов вычисляются по несколько раз.
+            # Можно рассмотреть вариант вычисления sin и cos на каждом шаге, используя формулы:
+            # cos((n+1)x) = cos(nx)*cos(x) - sin(nx)*sin(x), аналоличную для sin и делать линейный переход
+            # от n к n+1.
             epochState = sma * [
                 (np.cos(aol) * np.cos(raanOmega) - np.sin(aol) * np.cos(inclination) * np.sin(raanOmega)),
                 (np.cos(aol) * np.sin(raanOmega) + np.sin(aol) * np.cos(inclination) * np.cos(raanOmega)),
