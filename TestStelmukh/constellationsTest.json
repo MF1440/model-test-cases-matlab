@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Starlink",
+	"Walkers": [
+	[
+	53, 50, 32, 1, 500, 360, 0
+	],
+	[
+	85, 50, 8, 1, 720, 360, 30
+	]
+	],
+	"numberSat": 2000
+  },
+  {
+    "name": "singlePolarGlobal",
+	"Walkers": [
+	[
+	89, 30, 19, 9, 800, 180, 0
+	]
+	],
+	"numberSat": 570
+  },
+  {
+    "name": "singlePolar",
+	"Walkers": [
+	[
+	89, 30, 8, 9, 800, 180, 0
+	]
+	],
+	"numberSat": 240
+  },
+  {
+    "name": "singlePolar",
+	"Walkers": [
+	[
+	89, 30, 8, 1, 800, 180, 0
+	]
+	],
+	"numberSat": 240
+  } ,
+  {
+    "name": "singleDelta",
+	"Walkers": [
+	[
+	60, 41, 36, 33, 650, 360, 0
+	]
+	],
+	"numberSat": 240
+  },
+  {
+    "name": "biWalkerGlobal",
+	"Walkers": [
+	[
+	60, 43, 40, 38, 600, 360, 0
+	],
+	[
+	89, 30, 12, 5, 800, 180, 0
+	]
+	],
+	"numberSat": 2080
+  }
+]
